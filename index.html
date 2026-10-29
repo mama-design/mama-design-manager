@@ -124,7 +124,7 @@ body[data-page="clients"] #clientFormCard:not(.hidden){display:block!important}
 <button id="finSubmit" type="submit">Salvar lançamento</button>
 <button id="finCancel" type="button">Cancelar</button><button id="finDelete" type="button" class="secondary hidden" style="background:#f9e4df;color:#8c2b20">Excluir lançamento</button>
 </div>
-</form></div><h3>Lançamentos do mês</h3><div id="finList">Nenhum lançamento carregado.</div><div style="margin-top:16px"><button id="finAddCategory" type="button">+ Categoria</button></div><div class="card" style="margin:18px 0;padding:18px">
+</form></div><h3>Lançamentos do mês</h3><div id="finList">Nenhum lançamento carregado.</div><div style="margin-top:12px"><button id="finAuditToggle" type="button" class="secondary">Histórico de exclusões</button><div id="finAuditPanel" class="hidden" style="margin-top:12px"><div id="finAuditList">Clique para carregar o histórico.</div></div></div><div style="margin-top:16px"><button id="finAddCategory" type="button">+ Categoria</button></div><div class="card" style="margin:18px 0;padding:18px">
 <h3>Fechamento mensal</h3>
 <p id="closeSummary">Confira os lançamentos antes de fechar o mês.</p>
 <p id="closeStatus"></p>
@@ -613,6 +613,21 @@ $f('finCancel').addEventListener('click',()=>$f('finEditor').classList.add('hidd
  });
 $f('finKind').addEventListener('change',catOptions);
 $f('finRefresh').addEventListener('click',refresh);
+ $f('finAuditToggle').addEventListener('click',async()=>{
+  const panel=$f('finAuditPanel');
+  if(!['owner','admin'].includes(currentRole())){feedback('Sem permissão para consultar auditoria.',true);return}
+  if(!panel.classList.contains('hidden')){panel.classList.add('hidden');return}
+  panel.classList.remove('hidden');$f('finAuditList').textContent='Carregando histórico...';
+  const {data,error}=await getDb().from('manager_delete_audit').select('id,table_name,record_id,deleted_at,deleted_by,old_data').eq('company_id',company()).order('deleted_at',{ascending:false}).limit(100);
+  if(error){$f('finAuditList').textContent='Não foi possível carregar: '+error.message;return}
+  const labels={financial_entries:'Lançamento financeiro',clients:'Cliente',events:'Evento'};
+  $f('finAuditList').innerHTML=(data||[]).length?(data||[]).map(r=>{
+   const label=labels[r.table_name]||r.table_name;
+   const name=r.old_data?.description||r.old_data?.full_name||r.old_data?.title||r.record_id;
+   const date=new Date(r.deleted_at).toLocaleString('pt-BR');
+   return '<div class="row"><div><strong>'+escape(label)+'</strong> · '+escape(String(name))+'<div class="muted small">'+escape(date)+' · Usuário: '+escape(r.deleted_by||'não identificado')+'</div></div></div>';
+  }).join(''):'Nenhuma exclusão registrada.';
+ });
 $f('finAddCategory').addEventListener('click',addCategory);
 $f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-edit]');if(b)edit(b.dataset.finEdit)});
 $f('company').addEventListener('change',()=>{if(document.body.dataset.page==='finance'){if(finTab==='annual')loadAnnual();else refresh()}});
