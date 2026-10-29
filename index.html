@@ -911,7 +911,7 @@ document.getElementById('teamInviteForm').onsubmit=async event=>{
  try{
   const {data,error}=await api.functions.invoke('invite-team-member',{body:{name,email,company_id:document.getElementById('company').value,permissions}});
   if(error){let message=error.message||String(error);try{const details=await error.context?.json?.();if(details?.error)message=details.error}catch(_){}throw Error(message)}if(!data?.success)throw Error(data?.error||'Não foi possível concluir o convite.');
-  inviteFeedback('Convite enviado para '+email+'.');status.textContent='Convite enviado para '+email+'.';await loadTeamPermissions();
+  inviteFeedback('O Supabase confirmou o convite para '+email+'. Atualizando a equipe...');await loadTeamPermissions();inviteFeedback('Convite enviado para '+email+'. Confira a lista abaixo e a caixa de entrada do e-mail.');
  }catch(error){inviteFeedback('Falha ao enviar convite: '+(error.message||String(error)),true)}finally{button.disabled=false;button.textContent='Enviar convite por e-mail'}
 };
 document.getElementById('invitePasswordForm').onsubmit=async event=>{
@@ -926,17 +926,17 @@ async function loadTeamPermissions(){
  const box=document.getElementById('teamMembers'),status=document.getElementById('teamStatus');
  if(typeof currentRole!=='function'||currentRole()!=='owner'){box.textContent='Acesso restrito à proprietária.';return}
  const cid=document.getElementById('company').value;
- box.textContent='Carregando equipe...';status.textContent='';
+ box.textContent='Carregando equipe...';
  try{
   const [mr,pr]=await Promise.all([api.from('memberships').select('user_id,role').eq('company_id',cid),api.from('member_permissions').select('user_id,resource,can_view,can_create,can_edit,can_delete').eq('company_id',cid)]);
   if(mr.error)throw mr.error;if(pr.error)throw pr.error;
   box.replaceChildren();
   const membersList=mr.data||[],permissions=pr.data||[];
-  if(!membersList.length){box.textContent='Nenhum vínculo encontrado.';return}
+  if(!membersList.length){box.textContent='Nenhum vínculo encontrado.';return}const count=document.createElement('p');count.className='muted small';count.textContent=membersList.length+' integrante(s) cadastrados nesta empresa.';box.append(count);
   for(const member of membersList){
    const card=document.createElement('div');card.className='team-member';
    const title=document.createElement('h3');title.textContent=member.role==='owner'?'Proprietária':member.role==='admin'?'Administradora':'Equipe';card.append(title);
-   const id=document.createElement('p');id.className='small muted';id.textContent='ID do usuário: '+member.user_id;card.append(id);
+   const id=document.createElement('p');id.className='small muted';id.textContent='Identificador: '+member.user_id;card.append(id);
    if(member.role==='owner'){const info=document.createElement('p');info.textContent='Acesso total protegido.';card.append(info);box.append(card);continue}
    const grid=document.createElement('div');grid.className='team-grid';
    for(const label of ['Área','Ver','Criar','Editar','Excluir']){const e=document.createElement('strong');e.textContent=label;grid.append(e)}
