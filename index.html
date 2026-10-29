@@ -554,7 +554,8 @@ function edit(id){
  $f('finNotes').value=r?.notes||'';
  $f('finEditorTitle').textContent=r?'Editar lançamento':'Novo lançamento';
  if(monthClosing){feedback('Mês fechado: reabra antes de alterar.',true);return;}
- $f('finEditor').classList.remove('hidden');
+ $f('finDelete').classList.toggle('hidden',!r||!['owner','admin'].includes(currentRole()));
+  $f('finEditor').classList.remove('hidden');
 }
 async function save(e){
  e.preventDefault();
@@ -596,6 +597,20 @@ $f('finForm').addEventListener('submit',save);
 $f('finSubmit').addEventListener('click',e=>{e.preventDefault();save(e)});
 $f('finNew').addEventListener('click',()=>edit(null));
 $f('finCancel').addEventListener('click',()=>$f('finEditor').classList.add('hidden'));
+ $f('finDelete').addEventListener('click',async()=>{
+  const id=$f('finId').value,r=rows.find(x=>x.id===id),b=$f('finDelete');
+  if(!r||!['owner','admin'].includes(currentRole()))return;
+  if(monthClosing){feedback('Mês fechado: reabra antes de excluir.',true);return}
+  if(!confirm('Excluir definitivamente o lançamento "'+r.description+'" ('+money(r.amount)+')? O histórico de exclusões deverá registrar esta operação.'))return;
+  b.disabled=true;
+  try{
+   const {data,error}=await getDb().from('financial_entries').delete().eq('id',id).eq('company_id',company()).select('id');
+   if(error)throw error;
+   if(!data?.length)throw Error('Exclusão não autorizada pelo banco.');
+   $f('finEditor').classList.add('hidden');await refresh();feedback('Lançamento excluído. Confira o registro no histórico de auditoria.');
+  }catch(e){feedback('Erro ao excluir: '+e.message,true)}
+  finally{b.disabled=false}
+ });
 $f('finKind').addEventListener('change',catOptions);
 $f('finRefresh').addEventListener('click',refresh);
 $f('finAddCategory').addEventListener('click',addCategory);
