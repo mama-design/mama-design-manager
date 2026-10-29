@@ -410,10 +410,9 @@ $('deleteSale').onclick=async()=>{
  if(!confirm('Excluir esta venda e seu recebimento? Esta ação não pode ser desfeita.'))return;
  const b=$('deleteSale');b.disabled=true;
  try{
-  const {error:paymentError}=await api.from('sale_installments').delete().eq('sale_id',id);
-  if(paymentError)throw paymentError;
-  const {error}=await api.from('sales').delete().eq('id',id).eq('company_id',$('company').value);
-  if(error)throw error;
+  if(!['owner','admin'].includes(currentRole()))throw Error('Sem permissão para excluir vendas.');
+   const {data,error}=await api.from('sales').delete().eq('id',id).eq('company_id',$('company').value).select('id');
+   if(error)throw error;if(!data?.length)throw Error('Nenhuma venda excluída. Verifique as permissões.');
   $('saleFormCard').classList.add('hidden');await loadCommercial();msg('commercialMsg','Venda excluída.');
  }catch(err){msg('commercialMsg','Erro ao excluir: '+err.message,true)}finally{b.disabled=false}
 };
@@ -620,7 +619,7 @@ $f('finRefresh').addEventListener('click',refresh);
   panel.classList.remove('hidden');$f('finAuditList').textContent='Carregando histórico...';
   const {data,error}=await getDb().from('manager_delete_audit').select('id,table_name,record_id,deleted_at,deleted_by,old_data').eq('company_id',company()).order('deleted_at',{ascending:false}).limit(100);
   if(error){$f('finAuditList').textContent='Não foi possível carregar: '+error.message;return}
-  const labels={financial_entries:'Lançamento financeiro',clients:'Cliente',events:'Evento'};
+  const labels={financial_entries:'Lançamento financeiro',clients:'Cliente',events:'Evento',sales:'Venda',client_children:'Filho(a)',sale_installments:'Parcela de venda'};
   $f('finAuditList').innerHTML=(data||[]).length?(data||[]).map(r=>{
    const label=labels[r.table_name]||r.table_name;
    const name=r.old_data?.description||r.old_data?.full_name||r.old_data?.title||r.record_id;
