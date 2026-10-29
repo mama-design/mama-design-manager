@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "Mama Design Manager",
+  "short_name": "Mama Manager",
+  "description": "Gestão de clientes, eventos, vendas e financeiro da Mama Design.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f5eee5",
+  "theme_color": "#28533f",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
