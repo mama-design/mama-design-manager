@@ -891,7 +891,7 @@ function prepareTeamInvite(){
  for(const [resource,name] of TEAM_RESOURCES){
   const label=document.createElement('span');label.textContent=name;grid.append(label);
   for(const [action,title] of TEAM_ACTIONS){
-   const wrap=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.dataset.resource=resource;input.dataset.action=action;input.setAttribute('aria-label',name+' — '+title);wrap.append(input);grid.append(wrap);
+   const input=document.createElement('button');input.type='button';input.className='team-permission-toggle';input.dataset.resource=resource;input.dataset.action=action;input.setAttribute('aria-label',name+' — '+title);input.setAttribute('aria-pressed','false');input.textContent='○';input.onclick=()=>{const selected=input.getAttribute('aria-pressed')!=='true';input.setAttribute('aria-pressed',String(selected));input.textContent=selected?'✓':'○';};grid.append(input);
   }
  }
 }
@@ -904,7 +904,7 @@ document.getElementById('teamInviteForm').onsubmit=async event=>{
  if(currentRole()!=='owner'){status.textContent='Somente a proprietária pode convidar.';return}
  const name=document.getElementById('teamInviteName').value.trim(),email=document.getElementById('teamInviteEmail').value.trim().toLowerCase();
  if(!name||!document.getElementById('teamInviteEmail').checkValidity()){status.textContent='Preencha nome e e-mail válidos.';return}
- const permissions=TEAM_RESOURCES.map(([resource])=>({resource,...Object.fromEntries(TEAM_ACTIONS.map(([action])=>[action,!!document.querySelector('#teamInviteGrid input[data-resource="'+resource+'"][data-action="'+action+'"]')?.checked]))}));
+ const permissions=TEAM_RESOURCES.map(([resource])=>({resource,...Object.fromEntries(TEAM_ACTIONS.map(([action])=>[action,document.querySelector('#teamInviteGrid button[data-resource="'+resource+'"][data-action="'+action+'"]')?.getAttribute('aria-pressed')==='true']))}));
  button.disabled=true;status.textContent='Enviando convite...';
  try{
   const {data,error}=await api.functions.invoke('invite-team-member',{body:{name,email,company_id:document.getElementById('company').value,permissions}});
@@ -959,4 +959,4 @@ async function loadTeamPermissions(){
   }
  }catch(e){box.textContent='Erro ao carregar equipe: '+e.message}
 }
-</script><style>body[data-page="password"] #app > :not(#invitePasswordPanel){display:none!important}body[data-page="password"] #invitePasswordPanel{display:block!important}</style></body></html>
+</script><style>body[data-page="password"] #app > :not(#invitePasswordPanel){display:none!important}body[data-page="password"] #invitePasswordPanel{display:block!important}</style><style>#teamInviteGrid .team-permission-toggle{display:flex;align-items:center;justify-content:center;min-width:34px;width:100%;height:36px;padding:0;border:1px solid #c9bba9;border-radius:8px;background:#fff;color:#526455;font-size:21px;cursor:pointer}#teamInviteGrid .team-permission-toggle[aria-pressed="true"]{background:#28533f;color:white;border-color:#28533f}#teamInviteGrid .team-permission-toggle:focus-visible{outline:3px solid #bd5134;outline-offset:2px}</style></body></html>
