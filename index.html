@@ -1388,4 +1388,13 @@ button:hover:not(:disabled){background:#984a33}
  #finMonthStrip button:hover:not(:disabled){background:#e4e7d8;color:#304b3e}
  #finMonthStrip button.active{background:#304b3e;color:#fffdf8;border-color:#304b3e;font-weight:700;box-shadow:0 2px 5px #304b3e1a}
 }
-</style><style>.rec-category-control{min-width:0}.rec-category-control #recAddCategory{margin:0;min-height:40px;font-size:12px}.rec-category-control #recCategoryFeedback:empty{display:none}</style><style>.quick-pay-action{display:block;margin-top:9px;min-height:40px;padding:9px 12px;font-size:12px;white-space:nowrap;background:var(--green)}.quick-pay-action:disabled{cursor:default}</style></body></html>
+</style><style>.rec-category-control{min-width:0}.rec-category-control #recAddCategory{margin:0;min-height:40px;font-size:12px}.rec-category-control #recCategoryFeedback:empty{display:none}</style><style>.quick-pay-action{display:block;margin-top:9px;min-height:40px;padding:9px 12px;font-size:12px;white-space:nowrap;background:var(--green)}.quick-pay-action:disabled{cursor:default}</style><style id="recurring-mobile-field-alignment">
+@media(max-width:760px){
+ #recForm>.grid{grid-template-columns:minmax(0,1fr)!important}
+ #recForm .grid>label,#recForm .rec-category-control{min-width:0;max-width:100%;width:100%}
+ #recForm input,#recForm select{display:block;width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+ #recForm input[type="date"]{appearance:none;-webkit-appearance:none;min-height:46px;text-align:left}
+ #recForm input[type="date"]::-webkit-date-and-time-value{min-width:0;text-align:left}
+ #recForm input[type="date"]::-webkit-datetime-edit{padding:0}
+}
+</style></body></html>
