@@ -469,14 +469,18 @@ $('deleteSale').onclick=async()=>{if(!canAccess('sales','delete'))return;
 };
 $('saleForm').querySelector('button[type=submit]').addEventListener('click',e=>{e.preventDefault();$('saleForm').onsubmit(e)});
 $('togglePackages').addEventListener('click',()=>{const list=$('packageList'),open=list.classList.toggle('hidden')===false;$('togglePackages').setAttribute('aria-expanded',String(open));$('packageToggleLabel').textContent=open?'Ocultar pacotes ▴':'Ver pacotes ▾'});
-async function loadCommercial(){if(!api||!$('company').value)return;$('commercialPanel').classList.remove('hidden');const company=$('company').value;const [p,s]=await Promise.all([api.from('service_packages').select('*').eq('company_id',company).order('name'),api.from('sales').select('*,sale_installments(id,installment_number,due_date,amount,paid_amount,paid_at)').eq('company_id',company).order('sale_date',{ascending:false}).limit(300)]);if(p.error||s.error){msg('commercialMsg',(p.error||s.error).message,true);return}packagesCache=p.data||[];salesCache=s.data||[];$('packageCount').textContent=packagesCache.length+' pacote(s) cadastrado(s)';setCommercialOptions();$('packageList').innerHTML=packagesCache.length?packagesCache.map(x=>'<div class="row"><div><strong>'+esc(x.name)+'</strong><div class="muted small">'+esc(x.event_type||'')+' · '+brl(x.price)+'</div></div><button class="secondary" data-package="'+esc(x.id)+'">Editar</button></div>').join(''):'Nenhum pacote cadastrado.';applyAccess();$('saleList').innerHTML=salesCache.length?salesCache.map(x=>{
- const client=clientCache.find(c=>c.id===x.client_id);
- const paid=(x.sale_installments||[]).reduce((sum,i)=>sum+Number(i.paid_amount||0),0);
- const isPaid=paid>=Number(x.total_amount||0);
- return '<div class="row"><div><strong>'+esc(x.description)+'</strong> · '+brl(x.total_amount)+
-  '<div class="muted small">'+esc(client?.full_name||'Cliente')+' · '+dateBR(x.sale_date)+
-  ' · '+(isPaid?'Pix recebido':'Pagamento antigo pendente — edite para regularizar')+'</div></div>'+
-  (canAccess('sales','edit')?'<button class="secondary" data-sale="'+esc(x.id)+'">Editar</button>':'')+'</div>';
+async function loadCommercial(){if(!api||!$('company').value)return;$('commercialPanel').classList.remove('hidden');const company=$('company').value;const [p,s]=await Promise.all([api.from('service_packages').select('*').eq('company_id',company).order('name'),api.from('sales').select('*,events(title,event_date,event_type,identity_due_date,notes),clients(full_name),sale_installments(id,installment_number,due_date,amount,paid_amount,paid_at)').eq('company_id',company).order('sale_date',{ascending:false}).limit(300)]);if(p.error||s.error){msg('commercialMsg',(p.error||s.error).message,true);return}packagesCache=p.data||[];salesCache=s.data||[];$('packageCount').textContent=packagesCache.length+' pacote(s) cadastrado(s)';setCommercialOptions();$('packageList').innerHTML=packagesCache.length?packagesCache.map(x=>'<div class="row"><div><strong>'+esc(x.name)+'</strong><div class="muted small">'+esc(x.event_type||'')+' · '+brl(x.price)+'</div></div><button class="secondary" data-package="'+esc(x.id)+'">Editar</button></div>').join(''):'Nenhum pacote cadastrado.';applyAccess();$('saleList').innerHTML=salesCache.length?salesCache.map(x=>{
+
+ const client=x.clients||clientCache.find(c=>c.id===x.client_id),event=x.events;
+ const paid=(x.sale_installments||[]).reduce((sum,i)=>sum+Number(i.paid_amount||0),0),isPaid=paid>=Number(x.total_amount||0);
+ const pack=packagesCache.find(p=>p.id===x.package_id);
+ const field=(label,value)=>'<div class="sale-detail-field"><span>'+esc(label)+'</span><strong>'+esc(value||'Não informado')+'</strong></div>';
+ return '<details class="sale-event-card"><summary><span class="sale-event-overview"><strong>'+esc(event?.title||'Venda sem evento vinculado')+'</strong><span>'+esc(client?.full_name||'Cliente não informado')+(event?.event_date?' · Festa: '+dateBR(event.event_date):'')+'</span><span>'+esc(pack?.name||x.description)+'</span></span><span class="sale-event-total"><strong>'+brl(x.total_amount)+'</strong><span>'+(isPaid?'Recebido':'Recebimento pendente')+'</span><span class="sale-detail-hint">Ver detalhes ⌄</span></span></summary><div class="sale-event-details"><div class="sale-detail-grid">'+
+ field('Evento',event?.title)+field('Data do evento',event?.event_date?dateBR(event.event_date):null)+field('Cliente',client?.full_name)+field('Pacote',pack?.name||x.description)+field('Data da venda',dateBR(x.sale_date))+field('Valor total',brl(x.total_amount))+field('Recebido',brl(paid))+field('Situação',statusNames[x.status]||x.status)+
+ (event?.identity_due_date?field('Entrega da identidade',dateBR(event.identity_due_date)):'')+'</div>'+
+ (event?.notes?'<p class="sale-detail-note"><strong>Observações do evento</strong><br>'+esc(event.notes)+'</p>':'')+
+ '<div class="sale-receipts"><h3>Recebimentos</h3>'+((x.sale_installments||[]).map(i=>'<p>'+dateBR(i.paid_at||i.due_date)+' · '+brl(i.paid_amount||0)+(i.paid_at?' recebido':' · sem data de recebimento')+'</p>').join('')||'<p class="muted">Nenhum recebimento registrado.</p>')+'</div>'+
+ (canAccess('sales','edit')?'<button type="button" class="secondary" data-sale="'+esc(x.id)+'">Editar venda</button>':'')+'</div></details>';
  }).join(''):'Nenhuma venda cadastrada.';
  document.querySelectorAll('[data-package]').forEach(b=>b.onclick=()=>editPackage(b.dataset.package));document.querySelectorAll('[data-package]').forEach(b=>b.hidden=!canAccess('packages','edit'));
  document.querySelectorAll('[data-sale]').forEach(b=>b.onclick=()=>openSale(b.dataset.sale));
@@ -1308,5 +1312,39 @@ button:hover:not(:disabled){background:#984a33}
 @media(max-width:760px){
  .fin-month-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;overflow:visible;padding:8px 0 18px}
  .fin-month-strip button{width:100%;min-width:0;min-height:44px;padding:10px 4px;white-space:normal}
+}
+</style><style id="app-mobile-refinements">
+.sale-event-card{border:1px solid var(--line);border-radius:12px;background:var(--paper);margin:12px 0;overflow:hidden}
+.sale-event-card>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:21px;cursor:pointer}
+.sale-event-card>summary::-webkit-details-marker{display:none}
+.sale-event-overview,.sale-event-total{display:flex;flex-direction:column;gap:5px;min-width:0}
+.sale-event-overview>strong{font:400 23px/1.25 Georgia,serif;color:var(--green)}
+.sale-event-overview>span,.sale-event-total>span{font-size:12px;color:var(--muted)}
+.sale-event-total{text-align:right;flex-shrink:0}
+.sale-event-total>strong{font-size:17px;color:var(--green)}
+.sale-event-total .sale-detail-hint{color:var(--terra);margin-top:5px}
+.sale-event-details{padding:0 21px 21px;border-top:1px solid var(--line)}
+.sale-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:20px 0}
+.sale-detail-field{min-width:0;overflow-wrap:anywhere}
+.sale-detail-field>span,.sale-detail-field>strong{display:block}
+.sale-detail-field>span{font-size:11px;color:var(--muted);margin-bottom:4px}
+.sale-detail-field>strong{font-size:14px;font-weight:550}
+.sale-detail-note{white-space:pre-wrap;overflow-wrap:anywhere}
+.sale-receipts{border-top:1px solid var(--line);padding:10px 0}
+@media(max-width:760px){
+ html{overflow-x:hidden;overscroll-behavior-x:none}
+ body{width:100%;max-width:100%;overflow-x:hidden;overscroll-behavior-x:none}
+ .wrap,#app,#app>section,.card,.grid,.grid>*,.toolbar,.top,.profile-grid,.client-filters-grid,.dashboard-grid{min-width:0;max-width:100%;box-sizing:border-box}
+ .top{flex-wrap:wrap}.toolbar>*{min-width:0;max-width:100%}.toolbar label{min-width:0!important}
+ input,select,textarea{min-width:0;max-width:100%;box-sizing:border-box}
+ .grid{grid-template-columns:minmax(0,1fr)}
+ .rec-table-wrap,.annual-values-table,#annualChart{width:100%;max-width:100%;min-width:0;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+ .rec-table-wrap table{min-width:650px}.manager-nav{max-width:none}
+ .fin-month-strip{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+ .fin-month-strip button{font-size:10px;padding:10px 1px;min-width:0;min-height:42px}
+ .sale-event-card>summary{padding:17px 14px;gap:10px;align-items:flex-start}
+ .sale-event-overview>strong{font-size:21px}.sale-event-overview>span{font-size:11px;overflow-wrap:anywhere}
+ .sale-event-total>strong{font-size:14px}.sale-event-total>span{font-size:10px}
+ .sale-event-details{padding:0 14px 17px}.sale-detail-grid{gap:14px}
 }
 </style></body></html>
