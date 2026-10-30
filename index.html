@@ -505,14 +505,14 @@ function isStaff(){return currentRole()==='staff'}
 function applyAccess(){
  const role=currentRole(),staff=role!=='owner';
  document.body.classList.toggle('staff-access',staff);
- const pageResources={clients:'clients',events:'events',commercial:'sales',finance:'finance',team:'team'};
+ const pageResources={clients:'clients',events:'events',commercial:'sales',finance:'finance',crm:'crm',team:'team'};
  document.querySelectorAll('[data-page]').forEach(el=>{
   const page=el.dataset.page,resource=pageResources[page];
-  const allowed=(page==='team'||page==='crm')?role==='owner':!resource||canAccess(resource,'view')||(page==='commercial'&&canAccess('packages','view'));
+  const allowed=page==='team'?role==='owner':!resource||canAccess(resource,'view')||(page==='commercial'&&canAccess('packages','view'));
   el.hidden=!allowed;el.style.display=allowed?'':'none';
  });
  for(const [page,resource] of Object.entries(pageResources)){
-  const panel=document.getElementById(({clients:'clientListPanel',events:'eventsPanel',commercial:'commercialPanel',finance:'financePanel',team:'teamPanel'})[page]);
+  const panel=document.getElementById(({clients:'clientListPanel',events:'eventsPanel',commercial:'commercialPanel',finance:'financePanel',crm:'crmPanel',team:'teamPanel'})[page]);
   if(panel&&staff&&!(page==='commercial'?(canAccess('sales','view')||canAccess('packages','view')):canAccess(resource,'view')))panel.setAttribute('data-access-denied','true');
   else panel?.removeAttribute('data-access-denied');
  }
@@ -717,7 +717,7 @@ function crmNextBirthday(value){const birth=crmDate(value);if(!birth)return null
 function crmPhone(phone){let n=String(phone||'').replace(/\D/g,'');if(n.length===10||n.length===11)n='55'+n;return n.length>=12&&n.length<=13?n:''}
 function crmMessage(row){const first=(row.client.full_name||'').trim().split(/\s+/)[0]||'tudo bem';return 'Oi, '+first+'! Tudo bem? 💚 Passando para saber se vocês já começaram a planejar '+row.label.toLowerCase()+'. A Mama Design adoraria fazer parte desse momento especial! Se quiser conhecer nossas opções, estou por aqui. ✨'}
 async function loadCrmRadar(){
- if(currentRole()!=='owner')return;
+ if(!canAccess('crm','view'))return;
  const box=$('crmList');box.textContent='Carregando oportunidades...';$('crmStatus').textContent='';
  try{
  const cid=$('company').value;
@@ -763,6 +763,7 @@ function renderCrmRadar(){
   const kind=r.kind==='event'?'Evento':'Aniversário',reminder=r.record?.next_contact_date;
   return '<div class="crm-entry"><div class="crm-entry-main"><strong>'+esc(r.label)+'</strong><div class="muted small">'+esc(r.client.full_name)+' · '+crmFormatDate(r.date)+' · '+(r.days===0?'Hoje':'Em '+r.days+' dia(s)')+'</div><span class="crm-pill">'+kind+'</span><span class="crm-pill '+tag+'">'+esc(crmStatusNames[status]||status)+'</span>'+(reminder?'<span class="crm-pill wait">Retorno: '+crmFormatDate(reminder)+'</span>':'')+'</div><div class="crm-actions">'+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener noreferrer" class="secondary">WhatsApp ↗</a>':'<span class="muted small">Sem telefone</span>')+'<button type="button" data-crm-action="contacted" data-crm-key="'+esc(r.key)+'">Marcar contatada</button><select class="crm-more" data-crm-select="'+esc(r.key)+'" aria-label="Mais ações para '+esc(r.label)+'"><option value="">Mais opções…</option><option value="awaiting_response">Aguardando resposta</option><option value="converted">Convertida</option><option value="dismissed">Descartar</option><option value="remind">Lembrar depois</option></select><button type="button" class="secondary" data-crm-history="'+esc(r.key)+'">Histórico</button></div></div>';
  }).join(''):'<p class="muted">Nenhuma oportunidade encontrada para este filtro.</p>';
+ document.querySelectorAll('#crmList [data-crm-action], #crmList [data-crm-select]').forEach(el=>el.hidden=!canAccess('crm','create'));
 }
 $('crmSearch').addEventListener('input',renderCrmRadar);
 $('crmFilter').addEventListener('change',renderCrmRadar);
@@ -776,7 +777,7 @@ $('crmList').addEventListener('click',e=>{
 });
 $('crmHistory').addEventListener('click',e=>{if(e.target.closest('#crmCloseHistory'))$('crmHistory').classList.add('hidden')});
 async function crmSaveAction(key,action,select){
- if(currentRole()!=='owner')return;
+ if(!canAccess('crm','view')||!canAccess('crm','create'))return;
  const row=crmRows.find(r=>r.key===key);if(!row)return;
  let date=null;
  if(action==='remind'){
@@ -796,8 +797,8 @@ $('crmList').addEventListener('click',e=>{const b=e.target.closest('button[data-
 $('crmList').addEventListener('change',e=>{const el=e.target.closest('select[data-crm-select]');if(el&&el.value)crmSaveAction(el.dataset.crmSelect,el.value,el)});
 
 function navigate(page){
- const resource={clients:'clients',events:'events',commercial:'sales',finance:'finance',team:'team'}[page];
- if(page==='crm'&&currentRole()!=='owner')return;
+ const resource={clients:'clients',events:'events',commercial:'sales',finance:'finance',crm:'crm',team:'team'}[page];
+ if(page==='crm'&&!canAccess('crm','view'))return;
  if(page==='team'&&currentRole()!=='owner')return;
  if(resource&&!canAccess(resource,'view')&&!(page==='commercial'&&canAccess('packages','view')))return;
  document.body.dataset.page=page;document.getElementById('financePanel').style.display=page==='finance'?'block':'none';
@@ -1017,7 +1018,7 @@ window.addEventListener('error',e=>{if(document.body.dataset.page==='finance')fe
 @media(max-width:550px){.team-grid{grid-template-columns:minmax(90px,1fr) repeat(4,49px);gap:4px;font-size:12px}}
 </style>
 <script>
-const TEAM_RESOURCES=[['clients','Clientes'],['events','Eventos'],['sales','Vendas'],['packages','Pacotes'],['finance','Financeiro'],['team','Equipe']];
+const TEAM_RESOURCES=[['clients','Clientes'],['events','Eventos'],['sales','Vendas'],['packages','Pacotes'],['finance','Financeiro'],['crm','Relacionamento'],['team','Equipe']];
 const TEAM_ACTIONS=[['can_view','Ver'],['can_create','Criar'],['can_edit','Editar'],['can_delete','Excluir']];
 function prepareTeamInvite(){
  const grid=document.getElementById('teamInviteGrid');grid.replaceChildren();
