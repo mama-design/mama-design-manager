@@ -154,7 +154,7 @@ body[data-page="clients"] #clientFormCard:not(.hidden),body[data-page="clients"]
 <label>Descrição<input id="recDescription" required=""/></label>
 <label>Valor mensal (R$)<input id="recAmount" min=".01" required="" step=".01" type="number"/></label>
 <label>Dia do vencimento<input id="recDay" max="31" min="1" required="" type="number" value="10"/></label>
-<label>Categoria<select id="recCategory"><option value="">Sem categoria</option></select></label>
+<div class="rec-category-control"><label>Categoria<select id="recCategory"><option value="">Sem categoria</option></select></label><button id="recAddCategory" type="button" class="secondary">+ Criar categoria</button><p id="recCategoryFeedback" class="small" role="status" aria-live="polite"></p></div>
 <label>Início<input id="recStart" required="" type="date"/></label>
 <label>Fim (opcional)<input id="recEnd" type="date"/></label>
 </div>
@@ -681,13 +681,21 @@ async function save(e){
  }catch(e){feedback('ERRO AO SALVAR: '+(e.message||e),true);alert('Não foi possível salvar: '+(e.message||e))}
  finally{btn.disabled=false}
 }
-async function addCategory(){
+async function addCategory(kind=$f('finKind').value,target='finCategory'){
  const name=prompt('Nome da categoria:');if(!name?.trim())return;
+ const local=$f('recCategoryFeedback'),button=$f(target==='recCategory'?'recAddCategory':'finAddCategory');
+ if(button)button.disabled=true;
+ if(target==='recCategory')local.textContent='Salvando categoria...';
  try{
-  const db=getDb(),cid=company();
-  const {error}=await db.from('financial_categories').insert({company_id:cid,name:name.trim(),kind:$f('finKind').value});
-  if(error)throw error;await refresh();feedback('Categoria cadastrada!');
- }catch(e){feedback('Erro na categoria: '+e.message,true);alert(e.message)}
+  const {data,error}=await getDb().from('financial_categories').insert({company_id:company(),name:name.trim(),kind}).select('id,name,kind').single();
+  if(error)throw error;if(!data?.id)throw Error('O banco não confirmou a criação da categoria.');
+  await refresh();
+  if(!cats.some(c=>c.id===data.id))cats.push(data);
+  catOptions();renderExtras();$f(target).value=data.id;
+  feedback('Categoria cadastrada!');
+  if(target==='recCategory')local.textContent='Categoria criada e selecionada.';
+ }catch(e){feedback('Erro na categoria: '+e.message,true);if(target==='recCategory')local.textContent='Não foi possível criar: '+e.message;alert(e.message)}
+ finally{if(button)button.disabled=false}
 }
 $f('finMonth').value=today().slice(0,7);
 $f('finForm').addEventListener('submit',save);
@@ -725,7 +733,8 @@ $f('finRefresh').addEventListener('click',refresh);
    return '<div class="row"><div><strong>'+escape(label)+'</strong> · '+escape(String(name))+'<div class="muted small">'+escape(date)+' · Usuário: '+escape(r.deleted_by||'não identificado')+'</div></div></div>';
   }).join(''):'Nenhuma exclusão registrada.';
  });
-$f('finAddCategory').addEventListener('click',addCategory);
+$f('finAddCategory').addEventListener('click',()=>addCategory());
+$f('recAddCategory').addEventListener('click',()=>addCategory($f('recKind').value,'recCategory'));
 $f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-edit]');if(b)edit(b.dataset.finEdit)});
 $f('company').addEventListener('change',()=>{if(document.body.dataset.page==='finance'){if(finTab==='annual')loadAnnual();else refresh()}});
 
@@ -1354,4 +1363,4 @@ button:hover:not(:disabled){background:#984a33}
  #finMonthStrip button:hover:not(:disabled){background:#e4e7d8;color:#304b3e}
  #finMonthStrip button.active{background:#304b3e;color:#fffdf8;border-color:#304b3e;font-weight:700;box-shadow:0 2px 5px #304b3e1a}
 }
-</style></body></html>
+</style><style>.rec-category-control{min-width:0}.rec-category-control #recAddCategory{margin:0;min-height:40px;font-size:12px}.rec-category-control #recCategoryFeedback:empty{display:none}</style></body></html>
