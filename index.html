@@ -629,12 +629,36 @@ async function refresh(){
   $f('finList').innerHTML=(rows.length+saleFinanceRows.length)?`<div class="rec-table-wrap"><table class="rec-table fin-entries-table"><thead><tr><th>Vencimento</th><th>Descrição</th><th>Tipo</th><th>Valor previsto</th><th>Pago / recebido</th><th>Situação</th><th>Ações</th></tr></thead><tbody>${[...rows,...saleFinanceRows].sort((a,b)=>a.due_date.localeCompare(b.due_date)).map(r=>{
     const paid=Number(r.paid_amount||0),amount=Number(r.amount||0);
     const status=paid>=amount?'Pago':paid>0?'Parcial':'Pendente';
-    return `<tr><td>${dateBR(r.due_date)}</td><td class="rec-description">${escape(r.description)}</td><td><span class="rec-tag ${r.kind==='income'?'income':'expense'}"><span class="fin-type-icon" aria-hidden="true">${r.kind==='income'?'↗':'↘'}</span> ${/\[recurring:[0-9a-f-]{36}\]/i.test(r.notes||'')?(r.kind==='income'?'Receita recorrente':'Despesa recorrente'):(r.kind==='income'?'Receita':'Despesa')}</span></td><td>${money(amount)}</td><td>${money(paid)}</td><td><span class="fin-payment-status ${paid>=amount?'paid':paid>0?'partial':'pending'}">${status}</span></td><td>${r.source==='sale'?'<span class="rec-status on" title="Gerencie o recebimento na aba Comercial">Comercial</span>':`<button type="button" data-fin-edit="${r.id}">Editar</button>`}</td></tr>`;
+    return `<tr><td>${dateBR(r.due_date)}</td><td class="rec-description">${escape(r.description)}</td><td><span class="rec-tag ${r.kind==='income'?'income':'expense'}"><span class="fin-type-icon" aria-hidden="true">${r.kind==='income'?'↗':'↘'}</span> ${/\[recurring:[0-9a-f-]{36}\]/i.test(r.notes||'')?(r.kind==='income'?'Receita recorrente':'Despesa recorrente'):(r.kind==='income'?'Receita':'Despesa')}</span></td><td>${money(amount)}</td><td>${money(paid)}</td><td><span class="fin-payment-status ${paid>=amount?'paid':paid>0?'partial':'pending'}">${status}</span>${canQuickPay(r)?`<button type="button" class="quick-pay-action" data-fin-pay="${r.id}">Marcar como paga</button>`:''} </td><td>${r.source==='sale'?'<span class="rec-status on" title="Gerencie o recebimento na aba Comercial">Comercial</span>':`<button type="button" data-fin-edit="${r.id}">Editar</button>`}</td></tr>`;
    }).join('')}</tbody></table></div>`:'<p>Nenhum lançamento neste mês.</p>';
   feedback('Dados carregados. '+rows.length+' lançamento(s) e '+saleFinanceRows.length+' recebimento(s) de vendas.');
  }catch(e){feedback('Erro ao carregar: '+(e.message||e),true)}
  finally{loading=false}
 }
+
+function canQuickPay(row){
+ return row.source!=='sale'&&row.kind==='expense'&&/\[recurring:[0-9a-f-]{36}\]/i.test(row.notes||'')&&Number(row.amount)>Number(row.paid_amount||0)&&!monthClosing&&canAccess('finance','edit');
+}
+async function markRecurringPaid(id,button){
+ if(button.disabled)return;
+ const row=rows.find(r=>r.id===id);
+ if(!row||!canQuickPay(row)){feedback('Este lançamento não pode ser quitado por esta opção.',true);return}
+ button.disabled=true;button.textContent='Salvando...';
+ try{
+  const amount=Number(row.amount),previous=Number(row.paid_amount||0),paidAt=today();
+  const {data,error}=await getDb().from('financial_entries')
+   .update({paid_amount:amount,paid_at:paidAt})
+   .eq('id',id).eq('company_id',company()).eq('kind','expense')
+   .eq('amount',amount).eq('paid_amount',previous).select('id,paid_amount,paid_at');
+  if(error)throw error;
+  if(!data?.length||Number(data[0].paid_amount)!==amount)throw Error('O lançamento foi alterado ou o banco não confirmou o pagamento. Atualize a lista antes de tentar novamente.');
+  row.paid_amount=amount;row.paid_at=paidAt;
+  button.textContent='Paga ✓';
+  await refresh();
+  feedback('Despesa marcada como paga integralmente hoje. Para corrigir, use Editar.');
+ }catch(e){feedback('Não foi possível registrar o pagamento: '+e.message,true);button.disabled=false;button.textContent='Marcar como paga'}
+}
+
 function edit(id){
  const r=rows.find(r=>r.id===id);
  $f('finForm').reset();
@@ -736,6 +760,7 @@ $f('finRefresh').addEventListener('click',refresh);
 $f('finAddCategory').addEventListener('click',()=>addCategory());
 $f('recAddCategory').addEventListener('click',()=>addCategory($f('recKind').value,'recCategory'));
 $f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-edit]');if(b)edit(b.dataset.finEdit)});
+$f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-pay]');if(b)markRecurringPaid(b.dataset.finPay,b)});
 $f('company').addEventListener('change',()=>{if(document.body.dataset.page==='finance'){if(finTab==='annual')loadAnnual();else refresh()}});
 
 let crmRows=[],crmContacts=[];
@@ -1363,4 +1388,4 @@ button:hover:not(:disabled){background:#984a33}
  #finMonthStrip button:hover:not(:disabled){background:#e4e7d8;color:#304b3e}
  #finMonthStrip button.active{background:#304b3e;color:#fffdf8;border-color:#304b3e;font-weight:700;box-shadow:0 2px 5px #304b3e1a}
 }
-</style><style>.rec-category-control{min-width:0}.rec-category-control #recAddCategory{margin:0;min-height:40px;font-size:12px}.rec-category-control #recCategoryFeedback:empty{display:none}</style></body></html>
+</style><style>.rec-category-control{min-width:0}.rec-category-control #recAddCategory{margin:0;min-height:40px;font-size:12px}.rec-category-control #recCategoryFeedback:empty{display:none}</style><style>.quick-pay-action{display:block;margin-top:9px;min-height:40px;padding:9px 12px;font-size:12px;white-space:nowrap;background:var(--green)}.quick-pay-action:disabled{cursor:default}</style></body></html>
