@@ -969,14 +969,17 @@ async function loadTeamPermissions(){
  const cid=document.getElementById('company').value;
  box.textContent='Carregando equipe...';
  try{
-  const [mr,pr]=await Promise.all([api.from('memberships').select('user_id,role').eq('company_id',cid),api.from('member_permissions').select('user_id,resource,can_view,can_create,can_edit,can_delete').eq('company_id',cid)]);
-  if(mr.error)throw mr.error;if(pr.error)throw pr.error;
+  const [mr,pr,profiles]=await Promise.all([api.from('memberships').select('user_id,role').eq('company_id',cid),api.from('member_permissions').select('user_id,resource,can_view,can_create,can_edit,can_delete').eq('company_id',cid),api.rpc('team_member_directory',{p_company_id:cid})]);
+  if(mr.error)throw mr.error;if(pr.error)throw pr.error;if(profiles.error)throw profiles.error;
+  const profileMap=new Map((profiles.data||[]).map(x=>[x.user_id,x]));
   box.replaceChildren();
   const membersList=mr.data||[],permissions=pr.data||[];
   if(!membersList.length){box.textContent='Nenhum vínculo encontrado.';return}const count=document.createElement('p');count.className='muted small';count.textContent=membersList.length+' integrante(s) cadastrados nesta empresa.';box.append(count);
   for(const member of membersList){
    const card=document.createElement('div');card.className='team-member';
-   const title=document.createElement('h3');title.textContent=member.role==='owner'?'Proprietária':member.role==='admin'?'Administradora':'Equipe';card.append(title);
+   const profile=profileMap.get(member.user_id)||{};const displayName=profile.full_name||profile.email||'Colaboradora sem nome';
+   const title=document.createElement('h3');title.textContent=displayName;card.append(title);
+   const detail=document.createElement('p');detail.className='small muted';detail.textContent=(profile.email||'E-mail indisponível')+' · '+(member.role==='owner'?'Proprietária':member.role==='admin'?'Administradora':'Equipe');card.append(detail);
    const id=document.createElement('p');id.className='small muted';id.textContent='Identificador: '+member.user_id;card.append(id);
    if(member.role==='owner'){const info=document.createElement('p');info.textContent='Acesso total protegido.';card.append(info);box.append(card);continue}
    const grid=document.createElement('div');grid.className='team-grid';
@@ -998,7 +1001,13 @@ async function loadTeamPermissions(){
      if(result.error)throw result.error;
      status.textContent='Permissões salvas. Peça à colaboradora para entrar novamente para atualizar a interface.';
     }catch(e){status.textContent='Não foi possível salvar: '+e.message}finally{save.disabled=false}
-   };card.append(save);box.append(card);
+   };card.append(save);
+   const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.style.marginLeft='10px';remove.textContent='Remover da equipe';remove.onclick=async()=>{
+    if(!confirm('Remover '+displayName+' ('+(profile.email||member.user_id)+') da equipe? O acesso será revogado, mas os dados cadastrados serão preservados.'))return;
+    remove.disabled=true;save.disabled=true;
+    try{const result=await api.rpc('remove_team_member',{p_company_id:cid,p_user_id:member.user_id});if(result.error)throw result.error;await loadTeamPermissions();status.textContent=displayName+' removida da equipe.';}
+    catch(e){status.textContent='Não foi possível remover: '+e.message;remove.disabled=false;save.disabled=false}
+   };card.append(remove);box.append(card);
   }
  }catch(e){box.textContent='Erro ao carregar equipe: '+e.message}
 }
