@@ -475,7 +475,7 @@ async function loadMemberAccess(userId){
  memberAccess={};
  if(currentRole()==='owner')return;
  const {data,error}=await api.from('member_permissions').select('resource,can_view,can_create,can_edit,can_delete').eq('company_id',$('company').value).eq('user_id',userId);
- if(error){console.error('Falha ao carregar permissões:',error.message);return}
+ if(error){console.error('Falha ao carregar permissões:',error.message);msg('appMsg','Não foi possível consultar as permissões: '+error.message,true);return}if(!data?.length){msg('appMsg','Nenhuma permissão disponível para esta conta. Confira a configuração da equipe.',true);return}
  for(const row of data||[])memberAccess[row.resource]=row;
 }
 function canAccess(resource,action='view'){
@@ -509,6 +509,7 @@ function applyAccess(){
  const who=$('who');if(who){const label=role==='owner'?'Proprietária':role==='admin'?'Administradora':'Equipe';who.textContent=(who.textContent.split(' · ')[0]||'')+' · '+label}
  const current=document.body.dataset.page;
  if(current!=='dashboard'&&pageResources[current]&&!canAccess(pageResources[current],'view'))document.body.dataset.page='dashboard';
+ document.querySelectorAll('#dashboardPanel .dash-tile').forEach(tile=>{const b=tile.querySelector('[data-page]');if(b)tile.style.display=b.hidden?'none':''});
 }
 $('company').addEventListener('change',async()=>{const {data:{user}}=await api.auth.getUser();if(user)await loadMemberAccess(user.id);applyAccess()});
 </script><script>
