@@ -953,6 +953,7 @@ async function saveInvitePassword(){
   status.textContent='Senha definida! Abrindo o Manager...';
   sessionStorage.removeItem('mama_invite_pending');
   history.replaceState(null,'',location.pathname);
+  document.body.dataset.page='dashboard';
   document.getElementById('invitePasswordPanel').classList.add('hidden');
   await loadUser();
  }catch(e){status.textContent='Não foi possível salvar: '+(e.message||String(e))}
