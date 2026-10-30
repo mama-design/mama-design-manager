@@ -917,7 +917,7 @@ function setFinanceTab(tab){
  $f('finMonthly').style.display=tab==='monthly'?'block':'none';
  $f('finRecurring').style.display=tab==='recurring'?'block':'none';
  $f('finAnnual').style.display=tab==='annual'?'block':'none';
- $f('finMonthStrip').style.display=tab==='monthly'?'flex':'none';
+ $f('finMonthStrip').style.display=tab==='monthly'?'':'none';
  document.querySelectorAll('[data-fin-tab]').forEach(b=>b.classList.toggle('active',b.dataset.finTab===tab));
  if(tab==='annual')loadAnnual();
  if(tab==='monthly')refresh();
@@ -1346,5 +1346,12 @@ button:hover:not(:disabled){background:#984a33}
  .sale-event-overview>strong{font-size:21px}.sale-event-overview>span{font-size:11px;overflow-wrap:anywhere}
  .sale-event-total>strong{font-size:14px}.sale-event-total>span{font-size:10px}
  .sale-event-details{padding:0 14px 17px}.sale-detail-grid{gap:14px}
+}
+</style><style id="finance-month-picker-finish">
+@media(max-width:760px){
+ #finMonthStrip{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;padding:8px;margin:16px 0 24px;background:#f1f0e6;border:1px solid #e4e3d6;border-radius:13px}
+ #finMonthStrip button{min-width:0;width:100%;min-height:42px;border:1px solid transparent;border-radius:8px;padding:10px 2px;background:transparent;color:#53634e;font-size:12px;font-weight:550;line-height:1.2;white-space:nowrap;box-shadow:none}
+ #finMonthStrip button:hover:not(:disabled){background:#e4e7d8;color:#304b3e}
+ #finMonthStrip button.active{background:#304b3e;color:#fffdf8;border-color:#304b3e;font-weight:700;box-shadow:0 2px 5px #304b3e1a}
 }
 </style></body></html>
