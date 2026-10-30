@@ -506,7 +506,7 @@ function applyAccess(){
  const role=currentRole(),staff=role!=='owner';
  document.body.classList.toggle('staff-access',staff);
  const pageResources={clients:'clients',events:'events',commercial:'sales',finance:'finance',crm:'crm',team:'team'};
- document.querySelectorAll('[data-page]').forEach(el=>{
+ document.querySelectorAll('#managerNav [data-page], #dashboardPanel [data-page]').forEach(el=>{
   const page=el.dataset.page,resource=pageResources[page];
   const allowed=page==='team'?role==='owner':!resource||canAccess(resource,'view')||(page==='commercial'&&canAccess('packages','view'));
   el.hidden=!allowed;el.style.display=allowed?'':'none';
@@ -531,6 +531,22 @@ function applyAccess(){
  document.querySelectorAll('#dashboardPanel .dash-tile').forEach(tile=>{const b=tile.querySelector('[data-page]');if(b)tile.style.display=b.hidden?'none':''});
 }
 $('company').addEventListener('change',async()=>{const {data:{user}}=await api.auth.getUser();if(user)await loadMemberAccess(user.id);applyAccess()});
+let accessRefreshRunning=false;
+async function refreshMemberPermissions(){
+ if(accessRefreshRunning||!api||document.visibilityState==='hidden'||$('app').classList.contains('hidden')||currentRole()==='owner'||document.body.dataset.page==='password')return;
+ accessRefreshRunning=true;
+ try{
+  const {data:{user},error}=await api.auth.getUser();
+  if(error||!user)return;
+  await loadMemberAccess(user.id);
+  applyAccess();
+ }catch(error){console.warn('Não foi possível atualizar os acessos:',error.message)}
+ finally{accessRefreshRunning=false}
+}
+window.addEventListener('focus',refreshMemberPermissions);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')refreshMemberPermissions()});
+setInterval(refreshMemberPermissions,30000);
+
 </script><script>
 (()=>{
 'use strict';
