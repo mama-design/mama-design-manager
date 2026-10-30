@@ -86,7 +86,20 @@ body[data-page="clients"] #clientFormCard:not(.hidden),body[data-page="clients"]
 <label style="min-width:190px">Visualizar<select id="eventView"><option value="upcoming">Próximos eventos</option><option value="month">Por mês</option><option value="past">Histórico</option></select></label>
 <label id="eventMonthWrap" class="hidden" style="min-width:160px">Mês do evento<select id="eventMonth"><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></label><label id="eventYearWrap" class="hidden" style="min-width:110px">Ano<select id="eventYear"></select></label>
 <span class="muted small" id="eventCount" aria-live="polite"></span>
-</div><div class="muted" id="eventList">Carregando eventos...</div></section><section class="card hidden" id="commercialPanel"><div class="top"><div><h2>Comercial · Vendas</h2><p class="muted small">Pacotes, vendas e parcelas no Supabase.</p></div><div class="toolbar"><button id="newSale" type="button">+ Nova venda</button><button class="secondary" id="newPackage" type="button">+ Pacote</button></div></div><div id="commercialMsg"></div><div class="hidden" id="packageFormCard"><h3>Cadastro de pacote</h3><form id="packageForm" novalidate=""><div id="packageSaveMsg" role="status" aria-live="polite"></div><input id="packageId" type="hidden"/><div class="grid"><label>Nome do pacote<input id="packageName" maxlength="160" required=""/></label><label>Tipo de evento<input id="packageType" placeholder="Ex.: Infantil, Casamento"/></label><label>Preço (R$)<input id="packagePrice" min="0" required="" step="0.01" type="number"/></label><label>Descrição<input id="packageDescription"/></label></div><div class="toolbar"><button type="submit">Salvar pacote</button><button class="secondary" id="cancelPackage" type="button">Cancelar</button></div></form></div><div class="hidden" id="saleFormCard"><h3>Cadastro de venda</h3><form id="saleForm" novalidate=""><input id="saleId" type="hidden"/><div class="grid"><label>Cliente<select id="saleClient" required=""></select></label><label>Evento<select id="saleEvent"><option value="">Sem evento</option></select></label><label>Pacote<select id="salePackage"><option value="">Sem pacote</option></select></label><label>Descrição da venda<input id="saleDescription" maxlength="300" required=""/></label><label>Data do recebimento (Pix)<input id="saleDate" required="" type="date"/></label><label>Valor recebido (R$)<input id="saleTotal" min="0" required="" step="0.01" type="number"/></label><label>Observações<input id="saleNotes"/></label></div><p class="muted small">Cadastre a venda somente após o recebimento integral do Pix. Ela aparecerá automaticamente como paga no Financeiro.</p><div class="toolbar"><button type="submit">Salvar venda</button><button class="secondary" id="cancelSale" type="button">Cancelar</button><button class="secondary" id="deleteSale" style="display:none" type="button">Excluir venda</button></div></form></div><div id="packageDetails" class="package-details"><button type="button" id="togglePackages" class="package-toggle" aria-expanded="false" aria-controls="packageList"><span><strong>Pacotes cadastrados</strong><small class="muted" id="packageCount">Consulte ou edite seus pacotes quando precisar</small></span><span id="packageToggleLabel">Ver pacotes ▾</span></button><div class="muted hidden" id="packageList">Carregando...</div></div><h3>Vendas</h3><div class="muted" id="saleList">Carregando...</div></section><section class="card" id="crmPanel"><h2>Radar de oportunidades</h2><p class="muted">Aniversários e eventos identificados automaticamente. Contatos registrados no histórico.</p><div id="crmStatus" role="status"></div><div class="grid"><label>Buscar cliente<input id="crmSearch" placeholder="Nome da cliente ou criança"></label><label>Exibir<select id="crmFilter"><option value="pending">Pendentes</option><option value="all">Todas</option><option value="followup">Retornos agendados</option></select></label></div><div id="crmList" class="muted">Abra esta aba para consultar oportunidades.</div></section><section class="card" id="teamPanel"><h2>Equipe e permissões</h2><p class="muted">Defina o que cada integrante pode visualizar, criar, editar ou excluir. Apenas a proprietária pode alterar essas permissões.</p><div id="teamStatus" role="status"></div><button type="button" id="teamInviteToggle">+ Adicionar colaboradora</button><form id="teamInviteForm" novalidate class="hidden" style="margin:16px 0;padding:18px;background:#faf5ee;border-radius:12px"><div class="grid"><label>Nome completo<input id="teamInviteName" required maxlength="120" autocomplete="name"></label><label>E-mail<input id="teamInviteEmail" type="email" required autocomplete="email"></label></div><p class="muted small">Selecione as permissões da colaboradora. Você poderá alterá-las depois.</p><div id="teamInviteGrid" class="team-grid"></div><p id="teamInviteFeedback" role="status" aria-live="polite" style="padding:10px 12px;border-radius:8px;background:#edf2e9;display:none;white-space:pre-wrap"></p><button type="button" id="teamInviteSubmit">Enviar convite por e-mail</button><button type="button" class="secondary" id="teamInviteCancel">Cancelar</button></form><div id="teamMembers">Carregando...</div><p class="small muted">Convites são enviados por e-mail. A colaboradora define sua própria senha.</p></section><section class="card" id="financePanel" style="display:none">
+</div><div class="muted" id="eventList">Carregando eventos...</div></section><section class="card hidden" id="commercialPanel"><div class="top"><div><h2>Comercial · Vendas</h2><p class="muted small">Pacotes, vendas e parcelas no Supabase.</p></div><div class="toolbar"><button id="newSale" type="button">+ Nova venda</button><button class="secondary" id="newPackage" type="button">+ Pacote</button></div></div><div id="commercialMsg"></div><div class="hidden" id="packageFormCard"><h3>Cadastro de pacote</h3><form id="packageForm" novalidate=""><div id="packageSaveMsg" role="status" aria-live="polite"></div><input id="packageId" type="hidden"/><div class="grid"><label>Nome do pacote<input id="packageName" maxlength="160" required=""/></label><label>Tipo de evento<input id="packageType" placeholder="Ex.: Infantil, Casamento"/></label><label>Preço (R$)<input id="packagePrice" min="0" required="" step="0.01" type="number"/></label><label>Descrição<input id="packageDescription"/></label></div><div class="toolbar"><button type="submit">Salvar pacote</button><button class="secondary" id="cancelPackage" type="button">Cancelar</button></div></form></div><div class="hidden" id="saleFormCard"><h3>Cadastro de venda</h3><form id="saleForm" novalidate=""><input id="saleId" type="hidden"/><div class="grid"><label>Cliente<select id="saleClient" required=""></select></label><label>Evento<select id="saleEvent"><option value="">Sem evento</option></select></label><label>Pacote<select id="salePackage"><option value="">Sem pacote</option></select></label><label>Descrição da venda<input id="saleDescription" maxlength="300" required=""/></label><label>Data do recebimento (Pix)<input id="saleDate" required="" type="date"/></label><label>Valor recebido (R$)<input id="saleTotal" min="0" required="" step="0.01" type="number"/></label><label>Observações<input id="saleNotes"/></label></div><p class="muted small">Cadastre a venda somente após o recebimento integral do Pix. Ela aparecerá automaticamente como paga no Financeiro.</p><div class="toolbar"><button type="submit">Salvar venda</button><button class="secondary" id="cancelSale" type="button">Cancelar</button><button class="secondary" id="deleteSale" style="display:none" type="button">Excluir venda</button></div></form></div><div id="packageDetails" class="package-details"><button type="button" id="togglePackages" class="package-toggle" aria-expanded="false" aria-controls="packageList"><span><strong>Pacotes cadastrados</strong><small class="muted" id="packageCount">Consulte ou edite seus pacotes quando precisar</small></span><span id="packageToggleLabel">Ver pacotes ▾</span></button><div class="muted hidden" id="packageList">Carregando...</div></div><h3>Vendas</h3><div class="muted" id="saleList">Carregando...</div></section><style>
+.crm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.crm-stat{background:#f8f3eb;border:1px solid #e9ddce;border-radius:12px;padding:14px}
+.crm-stat strong{display:block;font-size:25px;color:#294e3d}.crm-stat span{font-size:13px;color:#6e7a70}
+.crm-entry{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 0;border-bottom:1px solid #e8dbcc;flex-wrap:wrap}
+.crm-entry-main{flex:1 1 240px;min-width:0}.crm-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.crm-actions button,.crm-actions a{font-size:13px;text-decoration:none}
+.crm-pill{display:inline-block;border-radius:20px;padding:4px 9px;font-size:12px;background:#ede4d8;color:#40594a;margin:6px 5px 0 0}
+.crm-pill.done{background:#e0eee2}.crm-pill.wait{background:#fff0d4}.crm-pill.off{background:#eee8e4}
+.crm-history{margin-top:22px;padding:18px;border:1px solid #ddcebd;border-radius:12px;background:#fcf9f4}
+.crm-history-item{padding:10px 0;border-bottom:1px solid #eee4d8}.crm-history-item:last-child{border:0}
+.crm-more{min-width:130px}
+@media(max-width:700px){.crm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.crm-actions{width:100%}}
+</style><section class="card" id="crmPanel"><h2>Radar de oportunidades</h2><p class="muted">Aniversários e eventos identificados automaticamente. Contatos registrados no histórico.</p><div id="crmStatus" role="status"></div><div id="crmStats" class="crm-stats" aria-live="polite"></div><div class="grid"><label>Buscar cliente<input id="crmSearch" placeholder="Nome da cliente ou criança"></label><label>Exibir<select id="crmFilter"><option value="pending">Para acompanhar</option><option value="all">Todas</option><option value="followup">Retornos agendados</option><option value="contacted">Contatadas</option><option value="converted">Convertidas</option></select></label></div><div id="crmList" class="muted">Abra esta aba para consultar oportunidades.</div><div id="crmHistory" class="crm-history hidden" aria-live="polite"></div></section><section class="card" id="teamPanel"><h2>Equipe e permissões</h2><p class="muted">Defina o que cada integrante pode visualizar, criar, editar ou excluir. Apenas a proprietária pode alterar essas permissões.</p><div id="teamStatus" role="status"></div><button type="button" id="teamInviteToggle">+ Adicionar colaboradora</button><form id="teamInviteForm" novalidate class="hidden" style="margin:16px 0;padding:18px;background:#faf5ee;border-radius:12px"><div class="grid"><label>Nome completo<input id="teamInviteName" required maxlength="120" autocomplete="name"></label><label>E-mail<input id="teamInviteEmail" type="email" required autocomplete="email"></label></div><p class="muted small">Selecione as permissões da colaboradora. Você poderá alterá-las depois.</p><div id="teamInviteGrid" class="team-grid"></div><p id="teamInviteFeedback" role="status" aria-live="polite" style="padding:10px 12px;border-radius:8px;background:#edf2e9;display:none;white-space:pre-wrap"></p><button type="button" id="teamInviteSubmit">Enviar convite por e-mail</button><button type="button" class="secondary" id="teamInviteCancel">Cancelar</button></form><div id="teamMembers">Carregando...</div><p class="small muted">Convites são enviados por e-mail. A colaboradora define sua própria senha.</p></section><section class="card" id="financePanel" style="display:none">
 <div class="fin-tabs" id="finTabs">
 <button class="active" data-fin-tab="monthly" type="button">Mensal</button>
 <button data-fin-tab="annual" type="button">Faturamento anual</button>
@@ -725,38 +738,62 @@ async function loadCrmRadar(){
  renderCrmRadar();
  }catch(e){box.textContent='Não foi possível carregar o Radar: '+e.message}
 }
+const crmStatusNames={pending:'Pendente',contacted:'Contatada',awaiting_response:'Aguardando resposta',converted:'Convertida',dismissed:'Descartada'};
+function crmLatest(){const latest=new Map();for(const c of crmContacts)if(c.opportunity_key&&!latest.has(c.opportunity_key))latest.set(c.opportunity_key,c);return latest}
+function crmFormatDate(x){return x?String(x).slice(0,10).split('-').reverse().join('/'):'—'}
+function crmActive(r){return !r.record||!['converted','dismissed','contacted'].includes(r.record.status)}
 function renderCrmRadar(){
- const q=$('crmSearch').value.trim().toLocaleLowerCase('pt-BR'),filter=$('crmFilter').value;
- const latest=new Map();for(const c of crmContacts)if(c.opportunity_key&&!latest.has(c.opportunity_key))latest.set(c.opportunity_key,c);
- const today=crmISO(new Date());let pending=0;
- const items=crmRows.map(r=>({...r,record:latest.get(r.key)})).filter(r=>{
- const active=!r.record||!['converted','dismissed','contacted'].includes(r.record.status);
- if(active)pending++;
- if(q&&!(r.label+' '+r.client.full_name).toLocaleLowerCase('pt-BR').includes(q))return false;
- if(filter==='pending'&&!active)return false;
- if(filter==='followup'&&!(r.record?.next_contact_date&&r.record.next_contact_date<=today))return false;
- return true
+ const q=$('crmSearch').value.trim().toLocaleLowerCase('pt-BR'),filter=$('crmFilter').value,latest=crmLatest(),today=crmISO(new Date());
+ const all=crmRows.map(r=>({...r,record:latest.get(r.key)}));
+ const pending=all.filter(crmActive).length,waiting=all.filter(r=>r.record?.status==='awaiting_response').length,converted=all.filter(r=>r.record?.status==='converted').length;
+ const followups=all.filter(r=>r.record?.next_contact_date&&r.record.next_contact_date<=today&&crmActive(r)).length;
+ $('crmStats').innerHTML=[['Oportunidades',all.length],['Para acompanhar',pending],['Aguardando resposta',waiting],['Convertidas',converted]].map(([label,n])=>'<div class="crm-stat"><strong>'+n+'</strong><span>'+esc(label)+'</span></div>').join('');
+ $('crmDashSummary').textContent=pending+' oportunidade(s) para acompanhar · '+followups+' retorno(s) vencido(s)';
+ const items=all.filter(r=>{
+  if(q&&!(r.label+' '+r.client.full_name).toLocaleLowerCase('pt-BR').includes(q))return false;
+  if(filter==='pending'&&!crmActive(r))return false;
+  if(filter==='followup'&&!(r.record?.next_contact_date&&r.record.next_contact_date<=today&&crmActive(r)))return false;
+  if(filter==='contacted'&&r.record?.status!=='contacted')return false;
+  if(filter==='converted'&&r.record?.status!=='converted')return false;
+  return true;
  });
- $('crmDashSummary').textContent=pending+' oportunidade(s) pendente(s) nos próximos 120 dias';
  $('crmList').innerHTML=items.length?items.map(r=>{
- const phone=crmPhone(r.client.phone),wa=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(crmMessage(r)):'';
- const status=r.record?.status||'pending',note=r.record?.next_contact_date?' · Retorno: '+r.record.next_contact_date.split('-').reverse().join('/'):'';
- return '<div class="row" style="align-items:flex-start;gap:12px"><div style="flex:1;min-width:180px"><strong>'+esc(r.label)+'</strong><div class="muted small">'+esc(r.client.full_name)+' · '+r.date.split('-').reverse().join('/')+' · em '+r.days+' dia(s)</div><div class="muted small">Status: '+esc(status)+esc(note)+'</div></div><div style="display:flex;gap:6px;flex-wrap:wrap">'+(wa?'<a class="secondary" href="'+esc(wa)+'" target="_blank" rel="noopener noreferrer">WhatsApp ↗</a>':'<span class="muted small">Sem telefone válido</span>')+'<button type="button" data-crm-action="contacted" data-crm-key="'+esc(r.key)+'">Contatada</button><button type="button" class="secondary" data-crm-action="awaiting_response" data-crm-key="'+esc(r.key)+'">Aguardar</button><button type="button" class="secondary" data-crm-action="converted" data-crm-key="'+esc(r.key)+'">Convertida</button><button type="button" class="secondary" data-crm-action="dismissed" data-crm-key="'+esc(r.key)+'">Descartar</button><button type="button" class="secondary" data-crm-action="remind" data-crm-key="'+esc(r.key)+'">Lembrar depois</button></div></div>'
+  const phone=crmPhone(r.client.phone),wa=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(crmMessage(r)):'';
+  const status=r.record?.status||'pending',tag=status==='converted'||status==='contacted'?'done':status==='awaiting_response'?'wait':status==='dismissed'?'off':'';
+  const kind=r.kind==='event'?'Evento':'Aniversário',reminder=r.record?.next_contact_date;
+  return '<div class="crm-entry"><div class="crm-entry-main"><strong>'+esc(r.label)+'</strong><div class="muted small">'+esc(r.client.full_name)+' · '+crmFormatDate(r.date)+' · '+(r.days===0?'Hoje':'Em '+r.days+' dia(s)')+'</div><span class="crm-pill">'+kind+'</span><span class="crm-pill '+tag+'">'+esc(crmStatusNames[status]||status)+'</span>'+(reminder?'<span class="crm-pill wait">Retorno: '+crmFormatDate(reminder)+'</span>':'')+'</div><div class="crm-actions">'+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener noreferrer" class="secondary">WhatsApp ↗</a>':'<span class="muted small">Sem telefone</span>')+'<button type="button" data-crm-action="contacted" data-crm-key="'+esc(r.key)+'">Marcar contatada</button><select class="crm-more" data-crm-select="'+esc(r.key)+'" aria-label="Mais ações para '+esc(r.label)+'"><option value="">Mais opções…</option><option value="awaiting_response">Aguardando resposta</option><option value="converted">Convertida</option><option value="dismissed">Descartar</option><option value="remind">Lembrar depois</option></select><button type="button" class="secondary" data-crm-history="'+esc(r.key)+'">Histórico</button></div></div>';
  }).join(''):'<p class="muted">Nenhuma oportunidade encontrada para este filtro.</p>';
 }
 $('crmSearch').addEventListener('input',renderCrmRadar);
 $('crmFilter').addEventListener('change',renderCrmRadar);
-$('crmList').addEventListener('click',async e=>{
- const btn=e.target.closest('button[data-crm-action]');if(!btn||currentRole()!=='owner')return;
- const row=crmRows.find(r=>r.key===btn.dataset.crmKey);if(!row)return;
- const action=btn.dataset.crmAction;
- let date=null;if(action==='remind'){date=prompt('Data do retorno (AAAA-MM-DD):',crmISO(new Date()));if(date===null)return;if(!crmDate(date)||date<crmISO(new Date())){alert('Informe uma data válida de hoje em diante.');return}}
- const status=action==='remind'?'awaiting_response':action;
- btn.disabled=true;
- const {error}=await api.from('crm_contacts').insert({company_id:$('company').value,client_id:row.client.id,opportunity_key:row.key,status,next_contact_date:date});
- if(error){alert('Erro ao registrar: '+error.message);btn.disabled=false;return}
- $('crmStatus').textContent='Registro salvo no histórico.';await loadCrmRadar();
+$('crmList').addEventListener('click',e=>{
+ const btn=e.target.closest('button[data-crm-history]');if(!btn)return;
+ const row=crmRows.find(r=>r.key===btn.dataset.crmHistory);if(!row)return;
+ const history=crmContacts.filter(c=>c.opportunity_key===row.key);
+ const box=$('crmHistory');box.classList.remove('hidden');
+ box.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h3>Histórico · '+esc(row.label)+'</h3><button type="button" class="secondary" id="crmCloseHistory">Fechar</button></div>'+(history.length?history.map(c=>'<div class="crm-history-item"><strong>'+esc(crmStatusNames[c.status]||c.status)+'</strong> · '+esc(new Date(c.contact_date).toLocaleString('pt-BR'))+(c.next_contact_date?' · Retorno '+crmFormatDate(c.next_contact_date):'')+(c.notes?'<div>'+esc(c.notes)+'</div>':'')+'</div>').join(''):'<p class="muted">Ainda não há registros para esta oportunidade.</p>');
+ box.scrollIntoView({behavior:'smooth',block:'nearest'});
 });
+$('crmHistory').addEventListener('click',e=>{if(e.target.closest('#crmCloseHistory'))$('crmHistory').classList.add('hidden')});
+async function crmSaveAction(key,action,select){
+ if(currentRole()!=='owner')return;
+ const row=crmRows.find(r=>r.key===key);if(!row)return;
+ let date=null;
+ if(action==='remind'){
+  date=prompt('Data do retorno (AAAA-MM-DD):',crmISO(new Date()));
+  if(date===null){if(select)select.value='';return}
+  if(!crmDate(date)||date<crmISO(new Date())){alert('Informe uma data válida de hoje em diante.');if(select)select.value='';return}
+ }
+ const status=action==='remind'?'awaiting_response':action;
+ if(!['contacted','awaiting_response','converted','dismissed'].includes(status))return;
+ if(select)select.disabled=true;
+ const {error}=await api.from('crm_contacts').insert({company_id:$('company').value,client_id:row.client.id,opportunity_key:row.key,status,next_contact_date:date});
+ if(error){alert('Erro ao registrar: '+error.message);if(select){select.disabled=false;select.value=''}return}
+ await loadCrmRadar();$('crmStatus').textContent='Ação registrada no histórico.';
+ $('crmHistory').classList.add('hidden');
+}
+$('crmList').addEventListener('click',e=>{const b=e.target.closest('button[data-crm-action]');if(b)crmSaveAction(b.dataset.crmKey,b.dataset.crmAction,b)});
+$('crmList').addEventListener('change',e=>{const el=e.target.closest('select[data-crm-select]');if(el&&el.value)crmSaveAction(el.dataset.crmSelect,el.value,el)});
 
 function navigate(page){
  const resource={clients:'clients',events:'events',commercial:'sales',finance:'finance',team:'team'}[page];
