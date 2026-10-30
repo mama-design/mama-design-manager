@@ -703,7 +703,7 @@ function navigate(page){
  if(page==='commercial'&&typeof loadCommercial==='function')loadCommercial();
  if(page==='team'&&typeof loadTeamPermissions==='function')loadTeamPermissions();
 }
-document.addEventListener('click',e=>{const b=e.target.closest('[data-page]');if(b){e.preventDefault();navigate(b.dataset.page)}});
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-page], a[data-page], [role="button"][data-page]');if(b){e.preventDefault();navigate(b.dataset.page)}});
 
 function renderExtras(){
  const cat=$f('recCategory'),old=cat.value;
