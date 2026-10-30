@@ -1085,6 +1085,19 @@ async function saveInvitePassword(){
  finally{button.disabled=false}
 }
 document.getElementById('invitePasswordForm').addEventListener('submit',event=>{event.preventDefault();saveInvitePassword()});
+
+async function persistTeamPermissions(rows){
+ const result=await api.from('member_permissions').upsert(rows,{onConflict:'company_id,user_id,resource'});
+ if(result.error)throw result.error;
+ const verified=await api.from('member_permissions').select('resource,can_view,can_create,can_edit,can_delete').eq('company_id',rows[0].company_id).eq('user_id',rows[0].user_id);
+ if(verified.error)throw verified.error;
+ const confirmed=new Map((verified.data||[]).map(row=>[row.resource,row]));
+ for(const row of rows){
+  const actual=confirmed.get(row.resource);
+  if(!actual||TEAM_ACTIONS.some(([key])=>actual[key]!==row[key]))throw Error('O banco não confirmou as alterações. As permissões anteriores continuam em vigor.');
+ }
+}
+
 async function loadTeamPermissions(){
  const box=document.getElementById('teamMembers'),status=document.getElementById('teamStatus');
  if(typeof currentRole!=='function'||currentRole()!=='owner'){box.textContent='Acesso restrito à proprietária.';return}
@@ -1115,15 +1128,30 @@ async function loadTeamPermissions(){
     }
    }
    card.append(grid);
-   const save=document.createElement('button');save.type='button';save.textContent='Salvar permissões';save.onclick=async()=>{
-    save.disabled=true;status.textContent='Salvando permissões...';
+   const localStatus=document.createElement('p');localStatus.className='team-save-feedback small';localStatus.setAttribute('role','status');localStatus.setAttribute('aria-live','polite');localStatus.textContent='As alterações são salvas automaticamente.';card.append(localStatus);
+   const save=document.createElement('button');save.type='button';save.textContent='Salvar permissões';
+   let saving=false,saveAgain=false,saveTimer=null;
+   const feedback=(message,error=false)=>{localStatus.textContent=message;localStatus.style.color=error?'#8c2b20':'#28533f';status.textContent=message;};
+   const collect=()=>TEAM_RESOURCES.map(([resource])=>({company_id:cid,user_id:member.user_id,resource,...Object.fromEntries(Object.entries(map[resource]).map(([key,input])=>[key,input.getAttribute('aria-pressed')==='true']))}));
+   const persist=async()=>{
+    clearTimeout(saveTimer);
+    if(saving){saveAgain=true;return}
+    saving=true;save.disabled=true;feedback('Salvando alterações de '+displayName+'...');
+    const rows=collect();
     try{
-     const rows=TEAM_RESOURCES.map(([resource])=>({company_id:cid,user_id:member.user_id,resource,...Object.fromEntries(Object.entries(map[resource]).map(([key,input])=>[key,input.getAttribute('aria-pressed')==='true']))}));
-     const result=await api.from('member_permissions').upsert(rows,{onConflict:'company_id,user_id,resource'});
-     if(result.error)throw result.error;
-     status.textContent='Permissões salvas. Peça à colaboradora para entrar novamente para atualizar a interface.';
-    }catch(e){status.textContent='Não foi possível salvar: '+e.message}finally{save.disabled=false}
-   };card.append(save);
+     await persistTeamPermissions(rows);
+     if(JSON.stringify(rows)!==JSON.stringify(collect()))saveAgain=true;
+     if(!saveAgain)feedback('Permissões de '+displayName+' salvas e conferidas no banco.');
+    }catch(e){feedback('Não foi possível salvar: '+e.message,true)}
+    finally{saving=false;save.disabled=false;if(saveAgain){saveAgain=false;await persist()}}
+   };
+   save.onclick=persist;
+   grid.addEventListener('click',event=>{
+    if(!event.target.closest('button[data-resource]'))return;
+    feedback('Alterações pendentes de salvamento...');
+    clearTimeout(saveTimer);saveTimer=setTimeout(persist,350);
+   });
+   card.append(save);
    const remove=document.createElement('button');remove.type='button';remove.className='secondary';remove.style.marginLeft='10px';remove.textContent='Remover da equipe';remove.onclick=async()=>{
     if(!confirm('Remover '+displayName+' ('+(profile.email||member.user_id)+') da equipe? O acesso será revogado, mas os dados cadastrados serão preservados.'))return;
     remove.disabled=true;save.disabled=true;
