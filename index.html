@@ -99,7 +99,7 @@ body[data-page="clients"] #clientFormCard:not(.hidden),body[data-page="clients"]
 .crm-history-item{padding:10px 0;border-bottom:1px solid #eee4d8}.crm-history-item:last-child{border:0}
 .crm-more{min-width:130px}
 @media(max-width:700px){.crm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.crm-actions{width:100%}}
-</style><section class="card" id="crmPanel"><h2>Radar de oportunidades</h2><p class="muted">Aniversários e eventos identificados automaticamente. Contatos registrados no histórico.</p><div id="crmStatus" role="status"></div><div id="crmStats" class="crm-stats" aria-live="polite"></div><div class="grid"><label>Buscar cliente<input id="crmSearch" placeholder="Nome da cliente ou criança"></label><label>Exibir<select id="crmFilter"><option value="pending">Para acompanhar</option><option value="all">Todas</option><option value="followup">Retornos agendados</option><option value="contacted">Contatadas</option><option value="converted">Convertidas</option></select></label></div><div id="crmList" class="muted">Abra esta aba para consultar oportunidades.</div><div id="crmHistory" class="crm-history hidden" aria-live="polite"></div></section><section class="card" id="teamPanel"><h2>Equipe e permissões</h2><p class="muted">Defina o que cada integrante pode visualizar, criar, editar ou excluir. Apenas a proprietária pode alterar essas permissões.</p><div id="teamStatus" role="status"></div><button type="button" id="teamInviteToggle">+ Adicionar colaboradora</button><form id="teamInviteForm" novalidate class="hidden" style="margin:16px 0;padding:18px;background:#faf5ee;border-radius:12px"><div class="grid"><label>Nome completo<input id="teamInviteName" required maxlength="120" autocomplete="name"></label><label>E-mail<input id="teamInviteEmail" type="email" required autocomplete="email"></label></div><p class="muted small">Selecione as permissões da colaboradora. Você poderá alterá-las depois.</p><div id="teamInviteGrid" class="team-grid"></div><p id="teamInviteFeedback" role="status" aria-live="polite" style="padding:10px 12px;border-radius:8px;background:#edf2e9;display:none;white-space:pre-wrap"></p><button type="button" id="teamInviteSubmit">Enviar convite por e-mail</button><button type="button" class="secondary" id="teamInviteCancel">Cancelar</button></form><div id="teamMembers">Carregando...</div><p class="small muted">Convites são enviados por e-mail. A colaboradora define sua própria senha.</p></section><section class="card" id="financePanel" style="display:none">
+</style><section class="card" id="crmPanel"><h2>Radar de oportunidades</h2><p class="muted">Aniversários nos próximos 120 dias, sem evento cadastrado para essa comemoração. Registre aqui os contatos de novos negócios.</p><div id="crmStatus" role="status"></div><div id="crmStats" class="crm-stats" aria-live="polite"></div><div class="grid"><label>Buscar cliente<input id="crmSearch" placeholder="Nome da cliente ou criança"></label><label>Exibir<select id="crmFilter"><option value="pending">Para prospectar</option><option value="all">Todas as oportunidades</option><option value="followup">Retornos agendados</option><option value="contacted">Contatadas</option><option value="converted">Convertidas</option></select></label></div><div id="crmList" class="muted">Abra esta aba para consultar oportunidades.</div><div id="crmHistory" class="crm-history hidden" aria-live="polite"></div><div id="crmTracking" class="crm-tracking"></div></section><section class="card" id="teamPanel"><h2>Equipe e permissões</h2><p class="muted">Defina o que cada integrante pode visualizar, criar, editar ou excluir. Apenas a proprietária pode alterar essas permissões.</p><div id="teamStatus" role="status"></div><button type="button" id="teamInviteToggle">+ Adicionar colaboradora</button><form id="teamInviteForm" novalidate class="hidden" style="margin:16px 0;padding:18px;background:#faf5ee;border-radius:12px"><div class="grid"><label>Nome completo<input id="teamInviteName" required maxlength="120" autocomplete="name"></label><label>E-mail<input id="teamInviteEmail" type="email" required autocomplete="email"></label></div><p class="muted small">Selecione as permissões da colaboradora. Você poderá alterá-las depois.</p><div id="teamInviteGrid" class="team-grid"></div><p id="teamInviteFeedback" role="status" aria-live="polite" style="padding:10px 12px;border-radius:8px;background:#edf2e9;display:none;white-space:pre-wrap"></p><button type="button" id="teamInviteSubmit">Enviar convite por e-mail</button><button type="button" class="secondary" id="teamInviteCancel">Cancelar</button></form><div id="teamMembers">Carregando...</div><p class="small muted">Convites são enviados por e-mail. A colaboradora define sua própria senha.</p></section><section class="card" id="financePanel" style="display:none">
 <div class="fin-tabs" id="finTabs">
 <button class="active" data-fin-tab="monthly" type="button">Mensal</button>
 <button data-fin-tab="annual" type="button">Faturamento anual</button>
@@ -763,13 +763,28 @@ $f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-e
 $f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-pay]');if(b)markRecurringPaid(b.dataset.finPay,b)});
 $f('company').addEventListener('change',()=>{if(document.body.dataset.page==='finance'){if(finTab==='annual')loadAnnual();else refresh()}});
 
-let crmRows=[],crmContacts=[];
+let crmRows=[],crmContacts=[],crmTrackedEvents=[];
 function crmDate(x){if(!x)return null;const m=String(x).slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return null;const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3]));return d.getUTCFullYear()===+m[1]&&d.getUTCMonth()===+m[2]-1&&d.getUTCDate()===+m[3]?d:null}
 function crmISO(d){return d.toISOString().slice(0,10)}
 function crmDays(d){const today=new Date(),base=Date.UTC(today.getFullYear(),today.getMonth(),today.getDate());return Math.round((d.getTime()-base)/86400000)}
 function crmNextBirthday(value){const birth=crmDate(value);if(!birth)return null;const today=new Date(),year=today.getFullYear();let next=new Date(Date.UTC(year,birth.getUTCMonth(),birth.getUTCDate()));if(crmDays(next)<0)next=new Date(Date.UTC(year+1,birth.getUTCMonth(),birth.getUTCDate()));return next}
 function crmPhone(phone){let n=String(phone||'').replace(/\D/g,'');if(n.length===10||n.length===11)n='55'+n;return n.length>=12&&n.length<=13?n:''}
 function crmMessage(row){const first=(row.client.full_name||'').trim().split(/\s+/)[0]||'tudo bem';return 'Oi, '+first+'! Tudo bem? 💚 Passando para saber se vocês já começaram a planejar '+row.label.toLowerCase()+'. A Mama Design adoraria fazer parte desse momento especial! Se quiser conhecer nossas opções, estou por aqui. ✨'}
+
+function crmNormalize(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]+/g,' ').trim()}
+function crmHasBookedBirthday(events,client,child,date){
+ if(!date)return false;
+ const person=crmNormalize(child?.first_name||client.full_name);
+ return events.some(event=>{
+  if(event.client_id!==client.id)return false;
+  const day=crmDate(event.event_date);if(!day||Math.abs(day-date)>45*86400000)return false;
+  if(child&&event.child_id)return event.child_id===child.id;
+  if(!child&&event.child_id)return false;
+  const title=' '+crmNormalize(event.title)+' ';
+  return !!person&&title.includes(' '+person+' ');
+ });
+}
+
 async function loadCrmRadar(){
  if(!canAccess('crm','view'))return;
  const box=$('crmList');box.textContent='Carregando oportunidades...';$('crmStatus').textContent='';
@@ -777,17 +792,23 @@ async function loadCrmRadar(){
  const cid=$('company').value;
  const [clients,events,contacts]=await Promise.all([
  api.from('clients').select('id,full_name,phone,birthday,client_children(id,first_name,birthday)').eq('company_id',cid),
- api.from('events').select('id,title,event_date,client_id').eq('company_id',cid),
+ api.from('events').select('id,title,event_date,client_id,child_id,event_type,identity_due_date').eq('company_id',cid),
  api.from('crm_contacts').select('id,client_id,opportunity_key,contact_date,status,notes,next_contact_date').eq('company_id',cid).order('contact_date',{ascending:false})
  ]);
  for(const result of [clients,events,contacts])if(result.error)throw result.error;
  const byId=new Map((clients.data||[]).map(c=>[c.id,c]));crmContacts=contacts.data||[];
- const rows=[],add=(c,key,label,date,kind)=>{if(!c||!date)return;const days=crmDays(date);if(days<0||days>120)return;rows.push({client:c,key,label,date:crmISO(date),days,kind})};
+ const rows=[],registered=events.data||[];
+ const add=(c,key,label,date)=>{if(!date)return;const days=crmDays(date);if(days<0||days>120)return;rows.push({client:c,key,label,date:crmISO(date),days,kind:'birthday'})};
  for(const c of clients.data||[]){
-  const own=crmNextBirthday(c.birthday);if(own)add(c,'client:'+c.id+':'+own.getUTCFullYear(),'Aniversário de '+c.full_name,own,'birthday');
-  for(const child of c.client_children||[]){const date=crmNextBirthday(child.birthday);if(date)add(c,'child:'+child.id+':'+date.getUTCFullYear(),'Aniversário de '+child.first_name,date,'birthday')}
+  const own=crmNextBirthday(c.birthday);
+  if(own&&!crmHasBookedBirthday(registered,c,null,own))add(c,'client:'+c.id+':'+own.getUTCFullYear(),'Aniversário de '+c.full_name,own);
+  for(const child of c.client_children||[]){
+   const date=crmNextBirthday(child.birthday);
+   if(date&&!crmHasBookedBirthday(registered,c,child,date))add(c,'child:'+child.id+':'+date.getUTCFullYear(),'Aniversário de '+child.first_name,date);
+  }
  }
- for(const e of events.data||[]){const date=crmDate(e.event_date);if(date)add(byId.get(e.client_id),'event:'+e.id,'Evento: '+e.title,date,'event')}
+ crmTrackedEvents=registered.map(event=>({...event,client:byId.get(event.client_id),days:crmDate(event.event_date)?crmDays(crmDate(event.event_date)):-1}))
+  .filter(event=>event.days>=0&&event.days<=120).sort((a,b)=>a.days-b.days);
  crmRows=rows.sort((a,b)=>a.days-b.days||a.label.localeCompare(b.label));
  renderCrmRadar();
  }catch(e){box.textContent='Não foi possível carregar o Radar: '+e.message}
@@ -801,7 +822,7 @@ function renderCrmRadar(){
  const all=crmRows.map(r=>({...r,record:latest.get(r.key)}));
  const pending=all.filter(crmActive).length,waiting=all.filter(r=>r.record?.status==='awaiting_response').length,converted=all.filter(r=>r.record?.status==='converted').length;
  const followups=all.filter(r=>r.record?.next_contact_date&&r.record.next_contact_date<=today&&crmActive(r)).length;
- $('crmStats').innerHTML=[['Oportunidades',all.length],['Para acompanhar',pending],['Aguardando resposta',waiting],['Convertidas',converted]].map(([label,n])=>'<div class="crm-stat"><strong>'+n+'</strong><span>'+esc(label)+'</span></div>').join('');
+ $('crmStats').innerHTML=[['Oportunidades',all.length],['Para prospectar',pending],['Aguardando resposta',waiting],['Eventos cadastrados',crmTrackedEvents.length]].map(([label,n])=>'<div class="crm-stat"><strong>'+n+'</strong><span>'+esc(label)+'</span></div>').join('');
  $('crmDashSummary').textContent=pending+' oportunidade(s) para acompanhar · '+followups+' retorno(s) vencido(s)';
  const items=all.filter(r=>{
   if(q&&!(r.label+' '+r.client.full_name).toLocaleLowerCase('pt-BR').includes(q))return false;
@@ -818,6 +839,10 @@ function renderCrmRadar(){
   return '<div class="crm-entry"><div class="crm-entry-main"><strong>'+esc(r.label)+'</strong><div class="muted small">'+esc(r.client.full_name)+' · '+crmFormatDate(r.date)+' · '+(r.days===0?'Hoje':'Em '+r.days+' dia(s)')+'</div><span class="crm-pill">'+kind+'</span><span class="crm-pill '+tag+'">'+esc(crmStatusNames[status]||status)+'</span>'+(reminder?'<span class="crm-pill wait">Retorno: '+crmFormatDate(reminder)+'</span>':'')+'</div><div class="crm-actions">'+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener noreferrer" class="secondary">WhatsApp ↗</a>':'<span class="muted small">Sem telefone</span>')+'<button type="button" data-crm-action="contacted" data-crm-key="'+esc(r.key)+'">Marcar contatada</button><select class="crm-more" data-crm-select="'+esc(r.key)+'" aria-label="Mais ações para '+esc(r.label)+'"><option value="">Mais opções…</option><option value="awaiting_response">Aguardando resposta</option><option value="converted">Convertida</option><option value="dismissed">Descartar</option><option value="remind">Lembrar depois</option></select><button type="button" class="secondary" data-crm-history="'+esc(r.key)+'">Histórico</button></div></div>';
  }).join(''):'<p class="muted">Nenhuma oportunidade encontrada para este filtro.</p>';
  document.querySelectorAll('#crmList [data-crm-action], #crmList [data-crm-select]').forEach(el=>el.hidden=!canAccess('crm','create'));
+ const tracked=crmTrackedEvents.filter(event=>!q||(event.title+' '+(event.client?.full_name||'')).toLocaleLowerCase('pt-BR').includes(q));
+ $('crmTracking').innerHTML='<h3>Eventos já cadastrados · Acompanhamento</h3><p class="muted small">Estes eventos já estão no estúdio e não entram na prospecção de novos negócios.</p>'+
+ (tracked.length?tracked.map(event=>'<div class="crm-entry"><div class="crm-entry-main"><strong>'+esc(event.title)+'</strong><div class="muted small">'+esc(event.client?.full_name||'Cliente')+' · '+crmFormatDate(event.event_date)+' · '+(event.days===0?'Hoje':'Em '+event.days+' dia(s)')+'</div><span class="crm-pill done">Evento cadastrado</span>'+(event.identity_due_date?'<span class="crm-pill">Entrega da identidade: '+crmFormatDate(event.identity_due_date)+'</span>':'')+'</div></div>').join(''):'<p class="muted">Nenhum evento cadastrado nos próximos 120 dias para esta busca.</p>');
+
 }
 $('crmSearch').addEventListener('input',renderCrmRadar);
 $('crmFilter').addEventListener('change',renderCrmRadar);
@@ -832,7 +857,7 @@ $('crmList').addEventListener('click',e=>{
 $('crmHistory').addEventListener('click',e=>{if(e.target.closest('#crmCloseHistory'))$('crmHistory').classList.add('hidden')});
 async function crmSaveAction(key,action,select){
  if(!canAccess('crm','view')||!canAccess('crm','create'))return;
- const row=crmRows.find(r=>r.key===key);if(!row)return;
+ const row=crmRows.find(r=>r.key===key);if(!row||row.kind!=='birthday')return;
  let date=null;
  if(action==='remind'){
   date=prompt('Data do retorno (AAAA-MM-DD):',crmISO(new Date()));
@@ -1397,4 +1422,4 @@ button:hover:not(:disabled){background:#984a33}
  #recForm input[type="date"]::-webkit-date-and-time-value{min-width:0;text-align:left}
  #recForm input[type="date"]::-webkit-datetime-edit{padding:0}
 }
-</style></body></html>
+</style><style>.crm-tracking{border-top:1px solid var(--line);padding-top:24px;margin-top:32px}.crm-tracking>h3{font:400 25px Georgia,serif;color:var(--green)}.crm-tracking .crm-entry{background:#f4f5ec;border-radius:10px;padding:18px;margin-top:10px;border:0}</style></body></html>
