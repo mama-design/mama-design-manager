@@ -816,6 +816,14 @@ async function loadCrmRadar(){
 const crmStatusNames={pending:'Pendente',contacted:'Contatada',awaiting_response:'Aguardando resposta',converted:'Convertida',dismissed:'Descartada'};
 function crmLatest(){const latest=new Map();for(const c of crmContacts)if(c.opportunity_key&&!latest.has(c.opportunity_key))latest.set(c.opportunity_key,c);return latest}
 function crmFormatDate(x){return x?String(x).slice(0,10).split('-').reverse().join('/'):'—'}
+function crmDateBadge(value,days){
+ const date=crmDate(value);if(!date)return '';
+ const month=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'][date.getUTCMonth()];
+ const tone=days<=7?'urgent':days<=30?'soon':'planned';
+ const label=days===0?'É hoje':days===1?'Falta 1 dia':'Faltam '+days+' dias';
+ return '<div class="crm-date-badge '+tone+'" aria-label="'+esc(crmFormatDate(value)+' · '+label)+'"><time datetime="'+esc(value)+'"><strong>'+String(date.getUTCDate()).padStart(2,'0')+'</strong><span>'+month+' '+date.getUTCFullYear()+'</span></time><div class="crm-countdown"><span>'+(days===0?'Chegou o dia':'Falta'+(days===1?'':'m'))+'</span><strong>'+(days===0?'Hoje':days)+'</strong><span>'+(days===0?'':days===1?'dia':'dias')+'</span></div></div>';
+}
+
 function crmActive(r){return !r.record||!['converted','dismissed','contacted'].includes(r.record.status)}
 function renderCrmRadar(){
  const q=$('crmSearch').value.trim().toLocaleLowerCase('pt-BR'),filter=$('crmFilter').value,latest=crmLatest(),today=crmISO(new Date());
@@ -836,12 +844,12 @@ function renderCrmRadar(){
   const phone=crmPhone(r.client.phone),wa=phone?'https://wa.me/'+phone+'?text='+encodeURIComponent(crmMessage(r)):'';
   const status=r.record?.status||'pending',tag=status==='converted'||status==='contacted'?'done':status==='awaiting_response'?'wait':status==='dismissed'?'off':'';
   const kind=r.kind==='event'?'Evento':'Aniversário',reminder=r.record?.next_contact_date;
-  return '<div class="crm-entry"><div class="crm-entry-main"><strong>'+esc(r.label)+'</strong><div class="muted small">'+esc(r.client.full_name)+' · '+crmFormatDate(r.date)+' · '+(r.days===0?'Hoje':'Em '+r.days+' dia(s)')+'</div><span class="crm-pill">'+kind+'</span><span class="crm-pill '+tag+'">'+esc(crmStatusNames[status]||status)+'</span>'+(reminder?'<span class="crm-pill wait">Retorno: '+crmFormatDate(reminder)+'</span>':'')+'</div><div class="crm-actions">'+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener noreferrer" class="secondary">WhatsApp ↗</a>':'<span class="muted small">Sem telefone</span>')+'<button type="button" data-crm-action="contacted" data-crm-key="'+esc(r.key)+'">Marcar contatada</button><select class="crm-more" data-crm-select="'+esc(r.key)+'" aria-label="Mais ações para '+esc(r.label)+'"><option value="">Mais opções…</option><option value="awaiting_response">Aguardando resposta</option><option value="converted">Convertida</option><option value="dismissed">Descartar</option><option value="remind">Lembrar depois</option></select><button type="button" class="secondary" data-crm-history="'+esc(r.key)+'">Histórico</button></div></div>';
+  return '<div class="crm-entry">'+crmDateBadge(r.date,r.days)+'<div class="crm-entry-main"><strong>'+esc(r.label)+'</strong><div class="muted small">'+esc(r.client.full_name)+'</div><span class="crm-pill">'+kind+'</span><span class="crm-pill '+tag+'">'+esc(crmStatusNames[status]||status)+'</span>'+(reminder?'<span class="crm-pill wait">Retorno: '+crmFormatDate(reminder)+'</span>':'')+'</div><div class="crm-actions">'+(wa?'<a href="'+esc(wa)+'" target="_blank" rel="noopener noreferrer" class="secondary">WhatsApp ↗</a>':'<span class="muted small">Sem telefone</span>')+'<button type="button" data-crm-action="contacted" data-crm-key="'+esc(r.key)+'">Marcar contatada</button><select class="crm-more" data-crm-select="'+esc(r.key)+'" aria-label="Mais ações para '+esc(r.label)+'"><option value="">Mais opções…</option><option value="awaiting_response">Aguardando resposta</option><option value="converted">Convertida</option><option value="dismissed">Descartar</option><option value="remind">Lembrar depois</option></select><button type="button" class="secondary" data-crm-history="'+esc(r.key)+'">Histórico</button></div></div>';
  }).join(''):'<p class="muted">Nenhuma oportunidade encontrada para este filtro.</p>';
  document.querySelectorAll('#crmList [data-crm-action], #crmList [data-crm-select]').forEach(el=>el.hidden=!canAccess('crm','create'));
  const tracked=crmTrackedEvents.filter(event=>!q||(event.title+' '+(event.client?.full_name||'')).toLocaleLowerCase('pt-BR').includes(q));
  $('crmTracking').innerHTML='<h3>Eventos já cadastrados · Acompanhamento</h3><p class="muted small">Estes eventos já estão no estúdio e não entram na prospecção de novos negócios.</p>'+
- (tracked.length?tracked.map(event=>'<div class="crm-entry"><div class="crm-entry-main"><strong>'+esc(event.title)+'</strong><div class="muted small">'+esc(event.client?.full_name||'Cliente')+' · '+crmFormatDate(event.event_date)+' · '+(event.days===0?'Hoje':'Em '+event.days+' dia(s)')+'</div><span class="crm-pill done">Evento cadastrado</span>'+(event.identity_due_date?'<span class="crm-pill">Entrega da identidade: '+crmFormatDate(event.identity_due_date)+'</span>':'')+'</div></div>').join(''):'<p class="muted">Nenhum evento cadastrado nos próximos 120 dias para esta busca.</p>');
+ (tracked.length?tracked.map(event=>'<div class="crm-entry">'+crmDateBadge(event.event_date,event.days)+'<div class="crm-entry-main"><strong>'+esc(event.title)+'</strong><div class="muted small">'+esc(event.client?.full_name||'Cliente')+'</div><span class="crm-pill done">Evento cadastrado</span>'+(event.identity_due_date?'<span class="crm-pill">Entrega da identidade: '+crmFormatDate(event.identity_due_date)+'</span>':'')+'</div></div>').join(''):'<p class="muted">Nenhum evento cadastrado nos próximos 120 dias para esta busca.</p>');
 
 }
 $('crmSearch').addEventListener('input',renderCrmRadar);
@@ -1422,4 +1430,23 @@ button:hover:not(:disabled){background:#984a33}
  #recForm input[type="date"]::-webkit-date-and-time-value{min-width:0;text-align:left}
  #recForm input[type="date"]::-webkit-datetime-edit{padding:0}
 }
-</style><style>.crm-tracking{border-top:1px solid var(--line);padding-top:24px;margin-top:32px}.crm-tracking>h3{font:400 25px Georgia,serif;color:var(--green)}.crm-tracking .crm-entry{background:#f4f5ec;border-radius:10px;padding:18px;margin-top:10px;border:0}</style></body></html>
+</style><style>.crm-tracking{border-top:1px solid var(--line);padding-top:24px;margin-top:32px}.crm-tracking>h3{font:400 25px Georgia,serif;color:var(--green)}.crm-tracking .crm-entry{background:#f4f5ec;border-radius:10px;padding:18px;margin-top:10px;border:0}</style><style id="crm-visual-dates">
+#crmPanel .crm-date-badge{display:flex;align-items:stretch;border:1px solid #d7dfce;border-radius:12px;overflow:hidden;background:#edf2e5;color:#304b3e;flex:0 0 162px;min-height:88px}
+.crm-date-badge time{display:flex;flex-direction:column;align-items:center;justify-content:center;width:78px;flex:none;background:#fffdf8;padding:10px 7px;gap:4px}
+.crm-date-badge time strong{font:400 33px/1 Georgia,serif;color:#304b3e}
+.crm-date-badge time span{font-size:10px;letter-spacing:.07em;font-weight:650;white-space:nowrap}
+.crm-countdown{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:2px;padding:8px}
+.crm-countdown strong{font:650 28px/1.15 "Segoe UI",sans-serif;color:inherit;letter-spacing:-.04em}
+.crm-countdown>span{font-size:11px;font-weight:550}
+#crmPanel .crm-date-badge.soon{background:#f4e4d7;border-color:#dfbda4;color:#9b4d32}
+#crmPanel .crm-date-badge.urgent{background:#f9ded6;border-color:#d8a190;color:#8c382c}
+@media(max-width:760px){
+ #crmPanel .crm-entry{gap:14px}
+ #crmPanel .crm-date-badge{flex:1 1 100%;min-height:78px}
+ .crm-date-badge time{width:45%;padding:10px;gap:4px}
+ .crm-date-badge time strong{font-size:32px}
+ .crm-countdown{flex-direction:row;flex-wrap:wrap;gap:7px}
+ .crm-countdown strong{font-size:30px}
+ .crm-countdown>span{font-size:12px}
+}
+</style></body></html>
