@@ -149,6 +149,7 @@ body[data-page="clients"] #clientFormCard:not(.hidden),body[data-page="clients"]
 </div></div><div id="finRecurring" style="display:none"><div class="card" style="margin:18px 0;padding:18px;background:#faf5ee">
 <h3>Receitas e despesas recorrentes</h3>
 <p>Cadastre uma vez: a receita ou despesa aparecerá automaticamente nos meses correspondentes, inclusive no total previsto.</p>
+<button id="newRecurrence" type="button">+ Nova recorrência</button>
 <form id="recForm" novalidate="">
 <div class="grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px"><label>Tipo<select id="recKind"><option value="expense">Despesa</option><option value="income">Receita</option></select></label>
 <label>Descrição<input id="recDescription" required=""/></label>
@@ -166,6 +167,64 @@ window.addEventListener('error',function(e){var m=document.getElementById('login
 window.addEventListener('unhandledrejection',function(e){var m=document.getElementById('loginMsg');if(m)m.textContent='Falha de conexão: '+(e.reason?.message||String(e.reason));});
 document.addEventListener('click',function(e){if(e.target.closest('#loginAction')){var m=document.getElementById('loginMsg');if(m)m.textContent='Clique reconhecido. Verificando login...';}},true);
 </script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script><script>
+const mobileFormScreen=matchMedia('(max-width:760px)');
+const mobileFormDialog=document.createElement('dialog');
+mobileFormDialog.id='mobileFormDialog';
+mobileFormDialog.setAttribute('aria-labelledby','mobileFormTitle');
+mobileFormDialog.innerHTML='<header><h2 id="mobileFormTitle"></h2><button type="button" class="secondary" aria-label="Fechar cadastro" autofocus>×</button></header><div class="mobile-form-content"></div>';
+const mobileFormContent=mobileFormDialog.querySelector('.mobile-form-content');
+let activeMobileForm;
+
+function openMobileForm(id,title,statusId){
+ if(!mobileFormScreen.matches||typeof mobileFormDialog.showModal!=='function')return false;
+ if(activeMobileForm)return true;
+
+ const card=$(id),status=statusId?$(statusId):null;
+ const statusPosition=status?document.createComment('form status'):null;
+ const previousFocus=document.activeElement;
+ if(status)status.before(statusPosition);
+ card.before(mobileFormDialog);
+ mobileFormContent.append(card);
+ if(status)mobileFormContent.append(status);
+ mobileFormDialog.querySelector('h2').textContent=title;
+ mobileFormDialog.showModal();
+ mobileFormContent.scrollTop=0;
+
+ const observer=new MutationObserver(()=>{
+  if(card.classList.contains('hidden'))closeMobileForm();
+  else if(status?.querySelector('.error')||status?.dataset.error==='true')status.scrollIntoView({block:'nearest'});
+ });
+ observer.observe(card,{attributes:true,attributeFilter:['class']});
+ if(status)observer.observe(status,{childList:true,subtree:true,attributes:true,attributeFilter:['data-error']});
+ activeMobileForm={card,status,statusPosition,previousFocus,observer};
+ return true;
+}
+
+function closeMobileForm(){
+ if(!activeMobileForm)return;
+ const {card,status,statusPosition,previousFocus,observer}=activeMobileForm;
+ activeMobileForm=null;
+ observer.disconnect();
+ mobileFormDialog.close();
+ mobileFormDialog.replaceWith(card);
+ if(status)statusPosition.replaceWith(status);
+ previousFocus?.focus({preventScroll:true});
+}
+
+function cancelMobileForm(){
+ if(!activeMobileForm)return;
+ const {card}=activeMobileForm;
+ if(card.querySelector('button[type="submit"]:disabled'))return;
+ if(card.id!=='recForm')card.classList.add('hidden');
+ closeMobileForm();
+}
+
+if(typeof mobileFormDialog.showModal==='function'){
+ document.documentElement.classList.add('supports-mobile-forms');
+ mobileFormDialog.querySelector('button').addEventListener('click',cancelMobileForm);
+ mobileFormDialog.addEventListener('cancel',e=>{e.preventDefault();cancelMobileForm()});
+ mobileFormScreen.addEventListener('change',e=>{if(!e.matches)closeMobileForm()});
+}
 let api=null,members=[],clientCache=[];const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function show(id){['setup','login','app'].forEach(x=>$(x).classList.toggle('hidden',x!==id))}function msg(id,t,error=false){$(id).innerHTML=t?'<div class="notice '+(error?'error':'')+'">'+esc(t)+'</div>':''}const MANAGER_CONNECTION=Object.freeze({"url":"https://zhdvnziazdcbquzslsls.supabase.co","key":"sb_publishable_FUYtdpkrTsLeEP9y38WGaQ_hab989mF"});function config(){return MANAGER_CONNECTION}async function init(){if(location.hash.includes('type=invite')||location.search.includes('type=invite'))sessionStorage.setItem('mama_invite_pending','1');const c=config();if(!c){show('login');return} $('projectUrl').value=c.url;$('publicKey').value=c.key;if(!window.supabase){show('login');msg('loginMsg','Biblioteca de conexão indisponível. Confira sua internet.',true);return}try{api=window.supabase.createClient(c.url,c.key,{auth:{persistSession:true,autoRefreshToken:true}});const {data:{session},error}=await api.auth.getSession();if(error)throw error;if(session){const {data:{user}}=await api.auth.getUser();const isInvite=location.hash.includes('type=invite')||location.search.includes('type=invite')||sessionStorage.getItem('mama_invite_pending')==='1';const isStaffInvite=!!user?.invited_at&&!user?.user_metadata?.mama_password_set; if(isInvite||isStaffInvite){show('app');document.getElementById('invitePasswordPanel').classList.remove('hidden');document.body.dataset.page='password';}else await loadUser()}else show('login')}catch(e){show('login');msg('loginMsg',e.message,true)}}$('connectBtn').onclick=async()=>{const url=$('projectUrl').value.trim().replace(/\/$/,'');const key=$('publicKey').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!key.startsWith('sb_publishable_')){msg('setupMsg','Confira o Project URL e a Publishable key.',true);return}localStorage.setItem('mama_supabase_config_v1',JSON.stringify({url,key}));location.reload()};$('changeConfig').onclick=()=>{localStorage.removeItem('mama_supabase_config_v1');location.reload()};async function handleManagerLogin(e){
  e?.preventDefault();
  const form=$('loginForm'), b=$('loginAction');
@@ -218,7 +277,7 @@ $('editProfile').onclick=()=>{if(!canAccess('clients','edit'))return;const id=$(
 $('birthdayMonth').addEventListener('change',renderClientList);
 $('clientSearch').addEventListener('input',renderClientList);$('clearClientFilters').onclick=()=>{$('clientTypeFilter').value='all';$('birthdayMonth').value='';$('clientSearch').value='';renderClientList()};
 function childRow(name='',birthday='',id=''){const d=document.createElement('div');d.className='grid child-entry';d.style.cssText='border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;position:relative';d.innerHTML='<label>Nome do filho(a)<input class="child-name" maxlength="150" required></label><label>Data de nascimento<input class="child-birthday" type="date"></label><button type="button" class="secondary remove-child" style="grid-column:1/-1">Remover</button>';d.dataset.childId=id;d.querySelector('.child-name').value=name;d.querySelector('.child-birthday').value=birthday;d.querySelector('.remove-child').onclick=()=>d.remove();$('childrenFields').appendChild(d)}
-function updateClientTypeFields(){const professional=$('clientType').value==='professional';$('professionalFields').classList.toggle('hidden',!professional);$('addChild').closest('.top').parentElement.classList.toggle('hidden',professional)}$('clientType').addEventListener('change',updateClientTypeFields);$('clientTypeFilter').addEventListener('change',renderClientList);function openClient(id=''){if(!canAccess('clients',id?'edit':'create')){msg('appMsg','Você não tem permissão para '+(id?'editar':'criar')+' clientes.',true);return}const c=clientCache.find(x=>x.id===id);const f=$('clientForm');f.reset();$('childrenFields').innerHTML='';$('editingClientId').value=c?.id||'';$('clientFormTitle').textContent=c?'Editar cliente':'Nova cliente';if(c){for(const key of ['full_name','phone','email','birthday','notes','company_name','instagram','business_segment'])f.elements[key].value=c[key]||'';f.elements.client_type.value=c.client_type||'final';(c.client_children||[]).forEach(k=>childRow(k.first_name,k.birthday,k.id))}updateClientTypeFields();$('deleteClient').classList.toggle('hidden',!c||!canAccess('clients','delete'));$('clientFormCard').classList.remove('hidden');$('clientFormCard').scrollIntoView({behavior:'smooth',block:'start'})}
+function updateClientTypeFields(){const professional=$('clientType').value==='professional';$('professionalFields').classList.toggle('hidden',!professional);$('addChild').closest('.top').parentElement.classList.toggle('hidden',professional)}$('clientType').addEventListener('change',updateClientTypeFields);$('clientTypeFilter').addEventListener('change',renderClientList);function openClient(id=''){if(!canAccess('clients',id?'edit':'create')){msg('appMsg','Você não tem permissão para '+(id?'editar':'criar')+' clientes.',true);return}const c=clientCache.find(x=>x.id===id);const f=$('clientForm');f.reset();$('childrenFields').innerHTML='';$('editingClientId').value=c?.id||'';$('clientFormTitle').textContent=c?'Editar cliente':'Nova cliente';if(c){for(const key of ['full_name','phone','email','birthday','notes','company_name','instagram','business_segment'])f.elements[key].value=c[key]||'';f.elements.client_type.value=c.client_type||'final';(c.client_children||[]).forEach(k=>childRow(k.first_name,k.birthday,k.id))}updateClientTypeFields();$('deleteClient').classList.toggle('hidden',!c||!canAccess('clients','delete'));$('clientFormCard').classList.remove('hidden');if(!id&&openMobileForm('clientFormCard','Nova cliente'))return;$('clientFormCard').scrollIntoView({behavior:'smooth',block:'start'})}
 $('company').onchange=()=>{$('clientFormCard').classList.add('hidden');$('clientProfilePanel').classList.add('hidden');loadClients()};$('refresh').onclick=loadClients;$('newClient').onclick=()=>openClient();$('newClientList').onclick=()=>openClient();$('addChild').onclick=()=>childRow();$('cancelClient').onclick=()=>$('clientFormCard').classList.add('hidden');$('deleteClient').onclick=async()=>{const id=$('editingClientId').value,c=clientCache.find(x=>x.id===id);if(!c||!canAccess('clients','delete'))return;const btn=$('deleteClient');btn.disabled=true;try{const {count,error:checkError}=await api.from('events').select('id',{count:'exact',head:true}).eq('company_id',$('company').value).eq('client_id',id);if(checkError)throw checkError;if(count)throw Error('Este cliente possui eventos vinculados. Não é possível excluí-lo sem tratar os vínculos.');const {count:saleCount,error:saleError}=await api.from('sales').select('id',{count:'exact',head:true}).eq('company_id',$('company').value).eq('client_id',id);if(saleError)throw saleError;if(saleCount)throw Error('Este cliente possui vendas vinculadas. Não é possível excluí-lo.');if((c.client_children||[]).length)throw Error('Este cliente possui filhos cadastrados. Remova os vínculos antes de excluir o cadastro.');if(!confirm('Excluir definitivamente o cadastro de '+c.full_name+'? Esta ação não pode ser desfeita.'))return;const {data,error}=await api.from('clients').delete().eq('id',id).eq('company_id',$('company').value).select('id');if(error)throw error;if(!data?.length)throw Error('Exclusão não autorizada pelo banco.');$('clientFormCard').classList.add('hidden');await loadClients();msg('appMsg','Cliente excluído com sucesso.')}catch(e){msg('clientSaveMsg','Não foi possível excluir: '+e.message,true)}finally{btn.disabled=false}};
 $('clientForm').onsubmit=async e=>{e.preventDefault();msg('clientSaveMsg','');const fd=new FormData(e.target),id=$('editingClientId').value;if(!canAccess('clients',id?'edit':'create')){msg('clientSaveMsg','Você não tem permissão para salvar este cadastro.',true);return}
 if(!String(fd.get('full_name')||'').trim()){msg('clientSaveMsg','Informe o nome completo da cliente.',true);return}
@@ -251,7 +310,7 @@ const val=id=>$(id).value;
 function fillEventClients(){const prev=val('eventClient');$('eventClient').innerHTML='<option value="">Selecione a cliente</option>'+clientCache.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.full_name)+'</option>').join('');if(clientCache.some(c=>c.id===prev))$('eventClient').value=prev;fillEventChildren()}
 function fillEventChildren(){const c=clientCache.find(c=>c.id===val('eventClient'));const prev=val('eventChild');$('eventChild').innerHTML='<option value="">Não vincular</option>'+(c?.client_children||[]).map(k=>'<option value="'+esc(k.id)+'">'+esc(k.first_name)+'</option>').join('');if((c?.client_children||[]).some(k=>k.id===prev))$('eventChild').value=prev}
 $('eventClient').addEventListener('change',()=>{ $('eventChild').value='';fillEventChildren() });
-function editEvent(id=''){if(!canAccess('events',id?'edit':'create'))return;const e=eventCache.find(x=>x.id===id);$('eventForm').reset();$('eventId').value=e?.id||'';fillEventClients();if(e){$('eventClient').value=e.client_id;fillEventChildren();$('eventChild').value=e.child_id||'';for(const [field,key] of Object.entries({eventTitle:'title',eventType:'event_type',eventDate:'event_date',eventDue:'identity_due_date',eventNotes:'notes'}))$(field).value=e[key]||''} const oldSale=salesCache.find(x=>x.event_id===id);$('eventPackage').innerHTML='<option value="">Selecione o pacote</option>'+packagesCache.filter(p=>p.active||p.id===oldSale?.package_id).map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' · '+brl(p.price)+'</option>').join('');$('eventPackage').value=oldSale?.package_id||'';$('eventSaleAmount').value=oldSale?.total_amount||'';$('eventSaleDate').value=oldSale?.sale_date||'';$('deleteEvent').classList.toggle('hidden',!e||!canAccess('events','delete'));$('deleteEvent').hidden=!canAccess('events','delete');$('eventFormCard').classList.remove('hidden');$('eventsPanel').scrollIntoView({behavior:'smooth'})}
+function editEvent(id=''){if(!canAccess('events',id?'edit':'create'))return;const e=eventCache.find(x=>x.id===id);$('eventForm').reset();$('eventId').value=e?.id||'';fillEventClients();if(e){$('eventClient').value=e.client_id;fillEventChildren();$('eventChild').value=e.child_id||'';for(const [field,key] of Object.entries({eventTitle:'title',eventType:'event_type',eventDate:'event_date',eventDue:'identity_due_date',eventNotes:'notes'}))$(field).value=e[key]||''} const oldSale=salesCache.find(x=>x.event_id===id);$('eventPackage').innerHTML='<option value="">Selecione o pacote</option>'+packagesCache.filter(p=>p.active||p.id===oldSale?.package_id).map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' · '+brl(p.price)+'</option>').join('');$('eventPackage').value=oldSale?.package_id||'';$('eventSaleAmount').value=oldSale?.total_amount||'';$('eventSaleDate').value=oldSale?.sale_date||'';$('deleteEvent').classList.toggle('hidden',!e||!canAccess('events','delete'));$('deleteEvent').hidden=!canAccess('events','delete');$('eventFormCard').classList.remove('hidden');if(!id&&openMobileForm('eventFormCard','Novo evento','eventMsg'))return;$('eventsPanel').scrollIntoView({behavior:'smooth'})}
 $('newEvent').onclick=async()=>{if(!canAccess('events','create'))return;await loadCommercial();if(!clientCache.length){msg('eventMsg','Cadastre uma cliente antes de criar o evento.',true);return}editEvent()};
 $('cancelEvent').onclick=()=>$('eventFormCard').classList.add('hidden');$('deleteEvent').onclick=async()=>{const id=$('eventId').value,e=eventCache.find(x=>x.id===id);if(!e||!canAccess('events','delete'))return;const b=$('deleteEvent');b.disabled=true;try{const {count,error:err}=await api.from('sales').select('id',{count:'exact',head:true}).eq('company_id',$('company').value).eq('event_id',id);if(err)throw err;if(count)throw Error('Este evento possui venda vinculada. Resolva a venda antes de excluir o evento.');if(!confirm('Excluir definitivamente o evento "'+e.title+'"? Esta ação não pode ser desfeita.'))return;const {data,error}=await api.from('events').delete().eq('id',id).eq('company_id',$('company').value).select('id');if(error)throw error;if(!data?.length)throw Error('Exclusão não autorizada pelo banco.');$('eventFormCard').classList.add('hidden');await loadEvents();msg('eventMsg','Evento excluído com sucesso.')}catch(err){msg('eventMsg','Não foi possível excluir: '+err.message,true)}finally{b.disabled=false}};
 function eventToday(){const now=new Date();return [now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-')}
@@ -339,7 +398,7 @@ $('eventForm').onsubmit=async ev=>{ev.preventDefault();if(!canAccess('events',va
   }
   $('eventFormCard').classList.add('hidden');await loadEvents();if(hasSale)await loadCommercial();
   msg('eventMsg',hasSale?'Evento e venda salvos! Pix registrado integralmente no Financeiro.':'Evento salvo! Venda não cadastrada porque não foi informado recebimento.');
- }catch(err){msg('eventMsg','Erro ao salvar: '+err.message+' Se o evento foi criado, abra-o para concluir sem duplicar.',true);await loadEvents();await loadCommercial();}
+ }catch(err){await loadEvents();await loadCommercial();msg('eventMsg','Erro ao salvar: '+err.message+' Se o evento foi criado, abra-o para concluir sem duplicar.',true);}
  finally{btn.disabled=false}};
 $('eventForm').querySelector('button[type=submit]').addEventListener('click',e=>{e.preventDefault();$('eventForm').onsubmit(e)});
 $('company').addEventListener('change',()=>{setTimeout(()=>loadEvents(),150)});
@@ -360,7 +419,7 @@ function setCommercialOptions(){
 function fillSaleEvents(){const prev=$('saleEvent').value;$('saleEvent').innerHTML='<option value="">Sem evento</option>'+eventCache.filter(e=>e.client_id===$('saleClient').value).map(e=>'<option value="'+esc(e.id)+'">'+esc(e.title)+'</option>').join('');if([...$('saleEvent').options].some(o=>o.value===prev))$('saleEvent').value=prev}
 $('saleClient').addEventListener('change',fillSaleEvents);
 $('salePackage').addEventListener('change',()=>{const p=packagesCache.find(x=>x.id===$('salePackage').value);if(p){$('saleDescription').value=p.name;$('saleTotal').value=p.price}});
-$('newPackage').onclick=()=>{if(!canAccess('packages','create'))return;$('packageForm').reset();$('packageId').value='';$('packageFormCard').classList.remove('hidden');$('saleFormCard').classList.add('hidden')};
+$('newPackage').onclick=()=>{if(!canAccess('packages','create'))return;$('packageForm').reset();$('packageId').value='';$('packageFormCard').classList.remove('hidden');$('saleFormCard').classList.add('hidden');openMobileForm('packageFormCard','Novo pacote','commercialMsg')};
 $('cancelPackage').onclick=()=>$('packageFormCard').classList.add('hidden');
 $('packageForm').onsubmit=async e=>{
  e.preventDefault();if(!canAccess('packages',$('packageId').value?'edit':'create')){msg('commercialMsg','Sem permissão para salvar pacotes.',true);return}
@@ -408,6 +467,7 @@ function openSale(id=''){if(!canAccess('sales',id?'edit':'create'))return;
  }
  $('deleteSale').style.display=sale&&!isStaff()?'inline-block':'none';
  $('saleFormCard').classList.remove('hidden');$('packageFormCard').classList.add('hidden');
+ if(!id&&openMobileForm('saleFormCard','Nova venda','commercialMsg'))return;
  $('commercialPanel').scrollIntoView({behavior:'smooth'});
 }
 $('newSale').onclick=()=>{if(!canAccess('sales','create'))return;if(!clientCache.length){msg('commercialMsg','Cadastre uma cliente primeiro.',true);return}openSale()};
@@ -637,19 +697,20 @@ async function refresh(){
 }
 
 function canQuickPay(row){
- return row.source!=='sale'&&row.kind==='expense'&&/\[recurring:[0-9a-f-]{36}\]/i.test(row.notes||'')&&Number(row.amount)>Number(row.paid_amount||0)&&!monthClosing&&canAccess('finance','edit');
+ return row.source!=='sale'&&row.kind==='expense'&&Number(row.amount)>Number(row.paid_amount||0)&&!monthClosing&&canAccess('finance','edit');
 }
-async function markRecurringPaid(id,button){
+async function markExpensePaid(id,button){
  if(button.disabled)return;
  const row=rows.find(r=>r.id===id);
  if(!row||!canQuickPay(row)){feedback('Este lançamento não pode ser quitado por esta opção.',true);return}
  button.disabled=true;button.textContent='Salvando...';
  try{
-  const amount=Number(row.amount),previous=Number(row.paid_amount||0),paidAt=today();
-  const {data,error}=await getDb().from('financial_entries')
+  const amount=Number(row.amount),paidAt=today();
+  const request=getDb().from('financial_entries')
    .update({paid_amount:amount,paid_at:paidAt})
-   .eq('id',id).eq('company_id',company()).eq('kind','expense')
-   .eq('amount',amount).eq('paid_amount',previous).select('id,paid_amount,paid_at');
+   .eq('id',id).eq('company_id',company()).eq('kind','expense').eq('amount',amount);
+  const unchanged=row.paid_amount==null?request.is('paid_amount',null):request.eq('paid_amount',row.paid_amount);
+  const {data,error}=await unchanged.select('id,paid_amount,paid_at');
   if(error)throw error;
   if(!data?.length||Number(data[0].paid_amount)!==amount)throw Error('O lançamento foi alterado ou o banco não confirmou o pagamento. Atualize a lista antes de tentar novamente.');
   row.paid_amount=amount;row.paid_at=paidAt;
@@ -676,7 +737,8 @@ function edit(id){
  $f('finEditorTitle').textContent=r?'Editar lançamento':'Novo lançamento';
  if(monthClosing){feedback('Mês fechado: reabra antes de alterar.',true);return;}
  $f('finDelete').classList.toggle('hidden',!r||!['owner','admin'].includes(currentRole()));
-  $f('finEditor').classList.remove('hidden');
+ $f('finEditor').classList.remove('hidden');
+ if(!id)openMobileForm('finEditor','Novo lançamento','finFeedback');
 }
 async function save(e){
  e.preventDefault();
@@ -760,7 +822,7 @@ $f('finRefresh').addEventListener('click',refresh);
 $f('finAddCategory').addEventListener('click',()=>addCategory());
 $f('recAddCategory').addEventListener('click',()=>addCategory($f('recKind').value,'recCategory'));
 $f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-edit]');if(b)edit(b.dataset.finEdit)});
-$f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-pay]');if(b)markRecurringPaid(b.dataset.finPay,b)});
+$f('finList').addEventListener('click',e=>{const b=e.target.closest('[data-fin-pay]');if(b)markExpensePaid(b.dataset.finPay,b)});
 $f('company').addEventListener('change',()=>{if(document.body.dataset.page==='finance'){if(finTab==='annual')loadAnnual();else refresh()}});
 
 let crmRows=[],crmContacts=[],crmTrackedEvents=[];
@@ -928,6 +990,7 @@ async function recSave(e){
   const {error}=await db.from('financial_recurring_rules').insert({company_id:cid,description,kind:$f('recKind').value,amount,day_of_month:day,category_id:$f('recCategory').value||null,starts_on:start,ends_on:end||null,active:true});
   if(error)throw error;
   $f('recForm').reset();$f('recDay').value='10';$f('recStart').value=today();
+ if(mobileFormDialog.open&&mobileFormDialog.contains($f('recForm')))closeMobileForm();
 await refresh();feedback('Recorrência cadastrada.');
  }catch(err){feedback('Erro na recorrência: '+err.message,true);alert(err.message)}
  finally{b.disabled=false}
@@ -962,6 +1025,7 @@ async function closeMonth(reopen=false){
 }
 $f('recStart').value=today();
 $f('recKind').addEventListener('change',renderExtras);
+$f('newRecurrence').addEventListener('click',()=>openMobileForm('recForm','Nova recorrência'));
 $f('recForm').addEventListener('submit',recSave);
 $f('recSave').addEventListener('click',e=>{e.preventDefault();recSave(e)});
 
@@ -1448,5 +1512,23 @@ button:hover:not(:disabled){background:#984a33}
  .crm-countdown{flex-direction:row;flex-wrap:wrap;gap:7px}
  .crm-countdown strong{font-size:30px}
  .crm-countdown>span{font-size:12px}
+}
+</style><style id="mobile-creation-forms">
+#newRecurrence,#mobileFormDialog:not([open]){display:none}
+@media(max-width:760px){
+ .supports-mobile-forms #newRecurrence{display:inline-block;margin:0 0 8px}
+ .supports-mobile-forms #newRecurrence + #recForm{display:none}
+ html:has(#mobileFormDialog[open]),body:has(#mobileFormDialog[open]){overflow:hidden}
+ #mobileFormDialog[open]{display:flex;flex-direction:column;box-sizing:border-box;width:min(520px,calc(100% - 24px));max-width:none;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin:auto;padding:0;border:1px solid var(--line);border-radius:18px;background:var(--paper);color:var(--ink);overflow:hidden;box-shadow:0 20px 64px #14271e40}
+ #mobileFormDialog::backdrop{background:#182a22a6}
+ #mobileFormDialog>header{position:static;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;background:#f1ede4;border-bottom:1px solid var(--line)}
+ #mobileFormDialog>header h2{margin:0;font:400 25px/1.15 Georgia,serif;color:var(--green)}
+ #mobileFormDialog>header button{flex:0 0 44px;height:44px;margin:0;padding:0;font-size:24px;line-height:1}
+ .mobile-form-content{min-height:0;padding:16px;overflow:auto;overscroll-behavior:contain}
+ #mobileFormDialog :is(#clientFormCard,#finEditor){padding:0!important;margin:0!important;border:0;background:none!important;box-shadow:none}
+ #mobileFormDialog :is(#clientFormTitle,#finEditorTitle,#packageFormCard>h3,#saleFormCard>h3){display:none}
+ #mobileFormDialog .grid{grid-template-columns:minmax(0,1fr)!important}
+ #mobileFormDialog :is(input,select,textarea){font-size:16px;min-width:0;max-width:100%}
+ #mobileFormDialog #finFeedback:not([data-error="true"]){display:none}
 }
 </style></body></html>
