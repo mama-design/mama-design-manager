@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Briefing · Mama Design</title>
+<style>
+:root{color-scheme:light;--green:#304b3e;--terra:#a85339;--cream:#f4f1ea;--paper:#fffdf8;--line:#e2ddd1;--ink:#303d34}
+*{box-sizing:border-box}body{margin:0;border-top:8px solid var(--green);background:var(--cream);color:var(--ink);font:16px/1.55 system-ui,sans-serif}
+main{width:min(660px,100%);margin:auto;padding:24px 16px 56px}header{text-align:center;padding:4px 0 18px}header img{width:124px;height:auto;object-fit:contain}
+.card{padding:clamp(17px,5vw,34px);background:var(--paper);border:1px solid var(--line);border-radius:18px;min-width:0}
+h1,h2{color:var(--green);font:400 2rem/1.12 Georgia,serif;margin:0 0 12px}h2{font-size:1.5rem}
+p{margin:0 0 16px}.eyebrow{color:var(--terra);text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:.73rem}
+.dates{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:20px 0}.dates div{background:#edf0e5;padding:12px;border-radius:10px}.dates strong{display:block;color:var(--green)}
+label{display:block;font-weight:600;margin:14px 0}label span,.hint{display:block;font-size:.86rem;font-weight:400;color:#62695d}
+input:not([type=checkbox]),textarea{display:block;margin:6px 0 0;width:100%;min-width:0;max-width:100%;border:1px solid #d2d6c9;border-radius:8px;background:#fff;padding:10px 12px;font:inherit;color:inherit}
+textarea{resize:vertical;min-height:75px}input[type=date],input[type=time]{appearance:none;min-height:46px}input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left}
+.checkbox{display:flex;align-items:flex-start;gap:10px}.checkbox input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--green);flex:none}
+button{border:0;border-radius:9px;min-height:44px;padding:11px 16px;background:var(--terra);color:white;font:600 1rem system-ui;cursor:pointer}button:disabled{opacity:.55;cursor:default}
+form section+section{border-top:1px solid var(--line);padding-top:20px;margin-top:24px}.file-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:10px}
+.file-list div{background:#f1eee5;border-radius:8px;padding:7px;min-width:0}.file-list img{display:block;width:100%;height:70px;object-fit:cover;border-radius:5px}.file-list small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-list button{margin-top:5px;padding:6px;background:transparent;color:var(--green);font-size:.8rem}
+#status{margin:10px 0;color:var(--terra);overflow-wrap:anywhere}#status:empty,[hidden]{display:none}
+@media(max-width:520px){button[type=submit],#start{width:100%}}
+</style>
+</head>
+<body>
+<main>
+<header><img src="/icons/mama-original.png" alt="Mama Design"></header>
+<div id="loading" class="card" role="status">Carregando seu briefing…</div>
+<section class="card" id="process" hidden>
+<p class="eyebrow" id="package"></p>
+<h1>Como funciona seu projeto</h1>
+<p>Antes de começarmos a criar, confira os prazos combinados para a sua identidade visual.</p>
+<div class="dates">
+<div>Envie o briefing até<strong id="briefingDue"></strong></div>
+<div>Previsão de envio da prévia<strong id="previewDue"></strong></div>
+</div>
+<p>Se o briefing chegar depois da data indicada, vou revisar o cronograma e combinar um novo prazo com você, se necessário.</p>
+<p>Com suas respostas, começo a desenvolver a identidade visual. Quando a prévia estiver pronta, envio para você revisar.</p>
+<label class="checkbox"><input id="agree" type="checkbox"> Li e entendi como funcionam os prazos do meu projeto.</label>
+<button id="start" type="button" disabled>Começar briefing</button>
+</section>
+<form class="card" id="briefing" hidden>
+<section>
+<h1>Vamos criar sua identidade visual?</h1>
+<p>Me conta o que você imaginou até aqui. Pode ser uma ideia bem definida ou só algumas referências que você gostou!</p>
+<label>Como o nome deve aparecer na arte?<span id="titleHint"></span><input name="title" maxlength="200" required></label>
+<label>Qual é a data do evento?<input type="date" name="event_date" required></label>
+<label>Qual é o horário?<span>Preencha se já estiver definido.</span><input type="time" name="start_time"></label>
+</section>
+<section>
+<h2>Sobre a identidade visual</h2>
+<label>Você já pensou em um tema?<span>Se ainda não tiver um, conta o que você quer transmitir com a festa.</span><textarea name="theme" maxlength="1500"></textarea></label>
+<label>Tem cores que você ama ou prefere evitar?<textarea name="colors" maxlength="1000"></textarea></label>
+<label>Como você imagina o estilo da identidade?<span>Pode ser aquarela, desenhos, cores suaves, algo divertido ou delicado.</span><textarea name="style" maxlength="1500"></textarea></label>
+<label>Tem algum detalhe que você gostaria muito de ver na arte?<textarea name="details" maxlength="2500"></textarea></label>
+</section>
+<section>
+<h2 id="placeTitle">Local do evento</h2>
+<label>Nome do local<input name="venue" maxlength="300"></label>
+<label>Endereço<span id="addressHint"></span><input name="address" maxlength="500"></label>
+<label id="phrase" hidden>Quer incluir alguma frase ou recado no convite?<textarea name="invite_phrase" maxlength="1200"></textarea></label>
+</section>
+<section id="pieces" hidden>
+<h2>Sobre as peças combinadas</h2>
+<p id="items"></p>
+<label>Me conta os detalhes das peças<span>Você pode incluir textos, formatos e medidas que já tiver.</span><textarea name="pieces" maxlength="2500"></textarea></label>
+</section>
+<section>
+<h2>Quer me mostrar o que te inspirou?</h2>
+<p>Adicione fotos salvas no celular, cole links ou mande dos dois jeitos. Pode ser uma decoração, uma paleta ou um print de um detalhe que você amou.</p>
+<label>Adicionar fotos<span>Opcional. Até 6 fotos de 3 MB cada, em JPG, PNG, WebP ou HEIC.</span>
+<input id="photos" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple></label>
+<div class="file-list" id="photoList"></div>
+<label>Links das referências<span>Opcional. Cole um link por linha.</span><textarea name="links" maxlength="3000" placeholder="https://"></textarea></label>
+</section>
+<button id="send" type="submit">Enviar briefing</button>
+</form>
+<section class="card" id="success" hidden>
+<h1>Briefing recebido! 💚</h1>
+<p>Obrigada por compartilhar suas ideias comigo.</p>
+<p>Com carinho, Mama Design</p>
+</section>
+<p id="status" role="alert"></p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const token=location.hash.slice(1);
+const endpoint='https://zhdvnziazdcbquzslsls.supabase.co/functions/v1/mama-event-briefing';
+const form=$('briefing');
+const date=value=>value.split('-').reverse().join('/');
+const selected=[];
+let sending=false;
+let acceptedDates;
+
+async function call(action,body){
+ const res=await fetch(endpoint+'?action='+action,{
+  method:'POST',headers:{Authorization:'Bearer '+token,...(typeof body==='string'?{'Content-Type':'application/json'}:{})},body,cache:'no-store'
+ });
+ const data=await res.json();
+ if(!res.ok)throw Error(data.error||'Não foi possível concluir. Tente novamente.');
+ return data;
+}
+function report(message){$('status').textContent=message;if(message)$('status').scrollIntoView({block:'nearest'})}
+function show(id){for(const section of ['loading','process','briefing','success'])$(section).hidden=section!==id}
+function renderPhotos(){
+ const nodes=selected.map((entry,index)=>{
+  const box=document.createElement('div'),img=document.createElement('img');
+  img.src=entry.url;img.alt='';
+  img.onerror=()=>img.remove();
+  const name=document.createElement('small');name.textContent=entry.file.name;
+  const button=document.createElement('button');button.type='button';button.textContent='Remover';
+  button.setAttribute('aria-label','Remover '+entry.file.name);
+  button.onclick=()=>{if(sending)return;URL.revokeObjectURL(entry.url);selected.splice(index,1);renderPhotos()};
+  box.append(img,name,button);return box;
+ });
+ $('photoList').replaceChildren(...nodes);
+}
+$('photos').onchange=e=>{
+ const files=[...e.target.files];e.target.value='';
+ if(sending||!files.length)return;
+ if(files.length+selected.length>6||files.some(f=>!f.size||f.size>3*1024*1024)){
+  report('Escolha até 6 fotos de no máximo 3 MB cada.');return;
+ }
+ for(const file of files)selected.push({file,url:URL.createObjectURL(file)});
+ report('');renderPhotos();
+};
+$('agree').onchange=()=>{$('start').disabled=!$('agree').checked};
+$('start').onclick=async()=>{
+ $('start').disabled=true;report('');
+ try{
+  const data=await call('accept',JSON.stringify(acceptedDates));show(data.submitted?'success':'briefing');
+  window.scrollTo(0,0);
+ }catch(e){report(e.message);$('start').disabled=false}
+};
+form.onsubmit=async e=>{
+ e.preventDefault();if(sending)return;
+ const data=new FormData(form);
+ for(const photo of selected)data.append('photos',photo.file);
+ sending=true;$('send').disabled=true;$('photos').disabled=true;$('send').textContent='Enviando…';report('');
+ try{
+  await call('submit',data);
+  for(const photo of selected)URL.revokeObjectURL(photo.url);
+  show('success');window.scrollTo(0,0);
+ }catch(e){report(e.message)}
+ finally{sending=false;$('send').disabled=false;$('photos').disabled=false;$('send').textContent='Enviar briefing'}
+};
+(async()=>{
+ try{
+  if(!/^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i.test(token))throw Error('Abra o link de briefing enviado pela Mama Design.');
+  const data=await call('read');
+  if(data.submitted){show('success');return}
+  $('package').textContent=data.type+' · '+data.package;
+  acceptedDates={briefing_due:data.briefingDue,promised_due:data.promisedDue};
+  $('briefingDue').textContent=date(data.briefingDue);
+  $('previewDue').textContent=date(data.promisedDue);
+  form.elements.event_date.min=data.closedOn;
+  $('titleHint').textContent=data.type==='Aniversário infantil'?'Exemplo: Joaquim · 1 ano. Inclua a idade se quiser.':'Escreva o nome da celebração ou de quem será homenageado.';
+  $('placeTitle').textContent=data.includesInvite?'Detalhes do convite':'Local do evento';
+  $('addressHint').textContent=data.includesInvite?'Preencha como deve aparecer no convite.':'Preencha se já estiver definido.';
+  $('phrase').hidden=!data.includesInvite;
+  $('pieces').hidden=!data.items;
+  $('items').textContent=data.items;
+  show(data.accepted?'briefing':'process');
+ }catch(e){show('');report(e.message)}
+})();
+</script>
+</body>
+</html>
