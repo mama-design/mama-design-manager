@@ -1598,7 +1598,7 @@ button:hover:not(:disabled){background:#984a33}
 .briefing-history{margin-top:12px}.briefing-history>summary{cursor:pointer}
 @media(max-width:760px){#briefingSection{padding:12px}.briefing-dates{grid-template-columns:repeat(2,minmax(0,1fr))}.briefing-controls input[type=date]{width:100%;min-width:0}}
 </style><style>#briefingsPanel,#agendaPanel{display:none}
-body[data-page="briefings"] #briefingsPanel,body[data-page="agenda"] #agendaPanel{display:block}
+body[data-page="briefings"] #briefingsPanel:not([data-access-denied="true"]),body[data-page="agenda"] #agendaPanel:not([data-access-denied="true"]){display:block!important}
 body:is([data-page="briefings"],[data-page="agenda"]) #app>:is(#dashboardPanel,#clientToolbar,#clientFormCard,#clientListPanel,#clientProfilePanel,#eventsPanel,#commercialPanel,#financePanel,#teamPanel,#crmPanel){display:none!important}
 .studio-page-top{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap}
 .studio-page-top h2{font:400 35px/1.1 Georgia,serif;color:var(--green);margin:5px 0 12px}.studio-page-top p{margin:4px 0}
