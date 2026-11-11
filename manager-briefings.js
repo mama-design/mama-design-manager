@@ -123,6 +123,7 @@ function briefingCard(b,ev,client,today){
   (late?'<p class="briefing-alert-text">Briefing '+(b.submitted_at?'recebido depois do prazo':'em atraso')+'. Revise a entrega se necessário.</p>':'')+
   (conflict?'<p class="briefing-alert-text">A entrega prevista cai no dia do evento ou depois. Revise a data.</p>':'')+
   '<p class="muted small">Leitura confirmada em '+briefingTimestamp(b.accepted_at)+' · Envio '+briefingTimestamp(b.submitted_at)+'</p>'+
+  (canAccess('events','delete')?'<div class="toolbar"><button type="button" class="secondary" data-delete-brief="'+b.event_id+'">Excluir evento</button></div>':'')+
   (edit&&!b.submitted_at?'<div class="toolbar"><button class="secondary" type="button" data-brief-action="link" data-brief-id="'+b.event_id+'">Copiar link</button><button class="secondary" type="button" data-brief-action="renew" data-brief-id="'+b.event_id+'">Gerar novo link</button></div>':'')+
   (edit&&!b.preview_sent_at?'<div class="toolbar briefing-controls"><label>Prazo combinado<input type="date" data-brief-date="'+b.event_id+'" min="'+b.closed_on+'" value="'+b.promised_due+'"></label><button class="secondary" type="button" data-brief-action="deadline" data-brief-id="'+b.event_id+'">Atualizar prazo</button>'+
     (b.submitted_at?'<button type="button" data-brief-action="sent" data-brief-id="'+b.event_id+'">Marcar prévia enviada</button>':'')+'</div>':'')+
@@ -158,6 +159,7 @@ async function loadBriefingAgenda(){
  $('briefingAgenda').innerHTML=(current.join('')||'<p class="muted small">Nenhum briefing ou prévia pendente.</p>')+
   (history.length?'<details class="briefing-history" id="briefingHistory"><summary>Prévias enviadas ('+history.length+')</summary>'+history.reverse().join('')+'</details>':'');
  for(const id of open){const details=$(id);if(details)details.open=true}
+ filterBriefingCards();
 }
 $('briefingAgenda').onclick=async e=>{
  const photosButton=e.target.closest('[data-brief-photos]');
@@ -209,3 +211,12 @@ $('company').addEventListener('change',()=>{
  $('briefingCreateCard').classList.add('hidden');
  $('briefingAgenda').replaceChildren();
 });
+
+function filterBriefingCards(){
+ const query=$('briefingSearch').value.trim().toLocaleLowerCase('pt-BR');
+ $('briefingAgenda').querySelectorAll('.briefing-record').forEach(card=>{
+  card.hidden=!card.textContent.toLocaleLowerCase('pt-BR').includes(query);
+ });
+ if(query&&$('briefingHistory'))$('briefingHistory').open=true;
+}
+$('briefingSearch').addEventListener('input',filterBriefingCards);
