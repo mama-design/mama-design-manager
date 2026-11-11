@@ -74,7 +74,8 @@ label span.question{font:inherit;color:inherit}
 <section id="debutanteQuestions" hidden>
 <h2>Detalhes dos 15 anos</h2>
 <label>O que tem a cara da debutante?<span>Contem um pouco da personalidade dela, do que ela ama e do que gostaria de ver na festa.</span><textarea name="debutante_personality" maxlength="1200" disabled></textarea></label>
-<label>Tem alguma inicial, símbolo ou detalhe que representa a debutante?<span>O vestido e a decoração também podem inspirar a arte, se já estiverem definidos.</span><textarea name="debutante_symbol" maxlength="800" disabled></textarea></label>
+<label>Quais iniciais devem aparecer no monograma?<span>Escreva as letras na ordem em que quer que apareçam.</span><input name="debutante_initials" maxlength="40" required disabled></label>
+<label>Gostaria de algum elemento específico no monograma?<span>Se tiver preferência, descreva a moldura, as flores, os símbolos ou outros detalhes que você imagina.</span><textarea name="debutante_monogram_details" maxlength="800" disabled></textarea></label>
 <label>Quais momentos especiais vocês planejam?<span>Entrada, valsa, homenagens ou outros momentos que precisam aparecer nas peças.</span><textarea name="debutante_moments" maxlength="1000" disabled></textarea></label>
 <label id="debutanteInviteQuestions" hidden>Que outras informações entram no convite?<span>Por exemplo, traje, confirmação de presença ou um recado para os convidados.</span><textarea name="debutante_invite_details" maxlength="1200" disabled></textarea></label>
 </section>
@@ -197,7 +198,7 @@ form.onsubmit=async e=>{
   $('debutanteQuestions').hidden=!debutante;
   $('weddingInviteQuestions').hidden=!wedding||!data.includesInvite;
   $('debutanteInviteQuestions').hidden=!debutante||!data.includesInvite;
-  for(const field of form.querySelectorAll('#weddingQuestions textarea, #debutanteQuestions textarea')){
+  for(const field of form.querySelectorAll('#weddingQuestions textarea, #debutanteQuestions textarea, #debutanteQuestions input')){
    field.disabled=!!field.closest('section[hidden],label[hidden]');
   }
   $('phrase').hidden=!data.includesInvite;

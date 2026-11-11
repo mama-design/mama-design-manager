@@ -53,7 +53,7 @@ const fields: Record<string,number> = {
   details:2500, venue:300, address:500, invite_phrase:1200, pieces:2500, links:3000,
 };
 const weddingFields = {wedding_story:1200,wedding_monogram:500,wedding_reception:1000,wedding_invite_details:1200};
-const debutanteFields = {debutante_personality:1200,debutante_symbol:800,debutante_moments:1000,debutante_invite_details:1200};
+const debutanteFields = {debutante_personality:1200,debutante_symbol:800,debutante_initials:40,debutante_monogram_details:800,debutante_moments:1000,debutante_invite_details:1200};
 function readAnswers(form: FormData, invite: boolean, items: string, type: string) {
   const extra=type==='Casamento'?weddingFields:type==='15 anos'?debutanteFields:{};
   const answers: Record<string,string> = {};
