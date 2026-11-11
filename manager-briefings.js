@@ -1,4 +1,5 @@
 const briefingRecords=new Map();
+const briefingSales=new Map();
 let briefingLoadSequence=0;
 let briefingRequestId;
 function eventHasBriefing(id){return briefingRecords.has(id)}
@@ -11,7 +12,7 @@ function briefingTimestamp(value){
  return value?new Intl.DateTimeFormat('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Sao_Paulo'}).format(new Date(value)):'—';
 }
 function canCreateBriefing(){
- return canAccess('events','create')&&canAccess('clients','view')&&canAccess('packages','view');
+ return canAccess('events','create')&&canAccess('clients','view')&&canAccess('packages','view')&&canAccess('sales','create');
 }
 function syncBriefingAccess(){
  $('newBriefing').hidden=!canCreateBriefing();
@@ -36,6 +37,7 @@ function setBriefingPackage(){
  const p=availableBriefingPackages().find(x=>x.id===val('briefingPackage'));
  $('briefingInvite').value=p?.briefing_invite==null?'':String(p.briefing_invite);
  $('briefingItems').value=p?.briefing_items||'';
+ $('briefingSalePreview').textContent=p?'Venda a receber de '+brl(p.price)+', com vencimento na data do fechamento. Você pode editar no Financeiro.':'';
 }
 function showBriefingClientRule(){
  const c=clientCache.find(x=>x.id===val('briefingClient'));
@@ -100,6 +102,7 @@ $('briefingCreate').onsubmit=async e=>{
   if(error||!data?.token)throw error||Error('Link não confirmado.');
   $('briefingCreateCard').classList.add('hidden');
   showBriefingLink(data.token);
+  await loadCommercial();
   await loadEvents();
  }catch(e){msg('briefingCreateStatus','Não foi possível criar o briefing. '+e.message,true)}
  finally{b.disabled=false}
@@ -107,6 +110,13 @@ $('briefingCreate').onsubmit=async e=>{
 
 function briefingCard(b,ev,client,today){
  const answers=b.answers||{};
+ const sale=briefingSales.get(b.event_id);
+ const received=sale?(sale.sale_installments||[]).reduce((n,i)=>n+Number(i.paid_amount||0),0):0;
+ const financial=sale&&(canAccess('sales','view')||canAccess('finance','view'))
+  ?'<p class="small">'+brl(sale.total_amount)+' · '+((sale.status==='cancelled')?'Venda cancelada':received>=Number(sale.total_amount)?'Recebido':received>0?'Recebido '+brl(received)+' · A receber '+brl(Number(sale.total_amount)-received):'A receber')+'</p>'+
+   (currentRole()==='owner'&&canAccess('finance','view')?'<button type="button" class="secondary" data-page="finance" data-receipt-month="'+esc((sale.sale_installments?.[0]?.due_date||b.closed_on).slice(0,7))+'">Ver no Financeiro</button>':'')
+  :!sale&&canAccess('sales','create')?'<button type="button" class="secondary" data-brief-sale="'+b.event_id+'">Gerar venda a receber</button>':'';
+
  const late=(b.submitted_at
   ?new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(b.submitted_at))
   :today)>b.briefing_due;
@@ -122,7 +132,7 @@ function briefingCard(b,ev,client,today){
   '<div class="briefing-dates">'+dateField('Meta interna',b.internal_due)+dateField('Prévia combinada',b.promised_due)+dateField('Receber briefing',b.briefing_due)+dateField('Dia do evento',ev.event_date)+'</div>'+
   (late?'<p class="briefing-alert-text">Briefing '+(b.submitted_at?'recebido depois do prazo':'em atraso')+'. Revise a entrega se necessário.</p>':'')+
   (conflict?'<p class="briefing-alert-text">A entrega prevista cai no dia do evento ou depois. Revise a data.</p>':'')+
-  '<p class="muted small">Leitura confirmada em '+briefingTimestamp(b.accepted_at)+' · Envio '+briefingTimestamp(b.submitted_at)+'</p>'+
+  financial+'<p class="muted small">Leitura confirmada em '+briefingTimestamp(b.accepted_at)+' · Envio '+briefingTimestamp(b.submitted_at)+'</p>'+
   (canAccess('events','delete')?'<div class="toolbar"><button type="button" class="secondary" data-delete-brief="'+b.event_id+'">Excluir evento</button></div>':'')+
   (edit&&!b.submitted_at?'<div class="toolbar"><button class="secondary" type="button" data-brief-action="link" data-brief-id="'+b.event_id+'">Copiar link</button><button class="secondary" type="button" data-brief-action="renew" data-brief-id="'+b.event_id+'">Gerar novo link</button></div>':'')+
   (edit&&!b.preview_sent_at?'<div class="toolbar briefing-controls"><label>Prazo combinado<input type="date" data-brief-date="'+b.event_id+'" min="'+b.closed_on+'" value="'+b.promised_due+'"></label><button class="secondary" type="button" data-brief-action="deadline" data-brief-id="'+b.event_id+'">Atualizar prazo</button>'+
@@ -146,6 +156,16 @@ async function loadBriefingAgenda(){
   if(data.length<1000)break;
  }
  if(sequence!==briefingLoadSequence||company!==val('company'))return;
+ briefingSales.clear();
+ if(canAccess('sales','view')||canAccess('sales','create')||canAccess('finance','view')){
+  for(let from=0;;from+=1000){
+   const result=await api.from('sales').select('id,event_id,total_amount,status,sale_installments(due_date,paid_amount)').eq('company_id',company).order('id').range(from,from+999);
+   if(sequence!==briefingLoadSequence||company!==val('company'))return;
+   if(result.error){msg('briefingAgendaStatus','Não foi possível conferir as vendas vinculadas. '+result.error.message,true);break}
+   for(const sale of result.data||[])if(sale.event_id)briefingSales.set(sale.event_id,sale);
+   if((result.data||[]).length<1000)break;
+  }
+ }
  briefingRecords.clear();
  const open=new Set([...$('briefingAgenda').querySelectorAll('details[open]')].map(x=>x.id));
  const current=[],history=[],today=briefingLocalDay(),events=new Map(eventCache.map(x=>[x.id,x]));
@@ -220,3 +240,16 @@ function filterBriefingCards(){
  if(query&&$('briefingHistory'))$('briefingHistory').open=true;
 }
 $('briefingSearch').addEventListener('input',filterBriefingCards);
+
+document.addEventListener('click',async e=>{
+ const button=e.target.closest('[data-brief-sale]');
+ if(!button||button.disabled||!canAccess('sales','create'))return;
+ button.disabled=true;
+ try{
+  const {data,error}=await api.rpc('mama_briefing_sale',{p_event:button.dataset.briefSale});
+  if(error||!data)throw error||Error('A venda não foi confirmada.');
+  await loadCommercial();await loadBriefingAgenda();
+  msg('briefingAgendaStatus','Venda vinculada ao Financeiro como a receber.');
+ }catch(e){msg('briefingAgendaStatus',e.message,true)}
+ finally{button.disabled=false}
+});

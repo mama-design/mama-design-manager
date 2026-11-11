@@ -96,7 +96,7 @@ body[data-page="clients"] #clientFormCard:not(.hidden),body[data-page="clients"]
 <label>Prazo especial de urgência <span class="muted small">(opcional)</span><input id="briefingUrgency" type="date"></label>
 <div id="briefingClientRule" hidden><label>Prazo padrão da cliente<select id="briefingClientDays"><option value="10">10 dias úteis</option><option value="7">7 dias úteis</option></select></label><button id="briefingSaveRule" type="button" class="secondary">Salvar regra da cliente</button></div>
 </div>
-<div class="toolbar"><button id="createBriefingLink" type="submit">Criar evento e gerar link</button><button id="cancelBriefing" type="button" class="secondary">Cancelar</button></div>
+<p id="briefingSalePreview" class="muted small" role="status"></p><div class="toolbar"><button id="createBriefingLink" type="submit">Criar evento, venda e gerar link</button><button id="cancelBriefing" type="button" class="secondary">Cancelar</button></div>
 </form>
 </div>
 <label class="studio-search">Buscar um briefing<input id="briefingSearch" type="search" placeholder="Evento ou cliente"></label><div id="briefingAgenda"></div>
@@ -129,7 +129,7 @@ body[data-page="clients"] #clientFormCard:not(.hidden),body[data-page="clients"]
 <label style="min-width:190px">Visualizar<select id="eventView"><option value="upcoming">Próximos eventos</option><option value="month">Por mês</option><option value="past">Histórico</option></select></label>
 <label id="eventMonthWrap" class="hidden" style="min-width:160px">Mês do evento<select id="eventMonth"><option value="01">Janeiro</option><option value="02">Fevereiro</option><option value="03">Março</option><option value="04">Abril</option><option value="05">Maio</option><option value="06">Junho</option><option value="07">Julho</option><option value="08">Agosto</option><option value="09">Setembro</option><option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option></select></label><label id="eventYearWrap" class="hidden" style="min-width:110px">Ano<select id="eventYear"></select></label>
 <span class="muted small" id="eventCount" aria-live="polite"></span>
-</div><div class="muted" id="eventList">Carregando eventos...</div></section><section class="card hidden" id="commercialPanel"><div class="top"><div><h2>Comercial · Vendas</h2><p class="muted small">Pacotes, vendas e parcelas no Supabase.</p></div><div class="toolbar"><button id="newSale" type="button">+ Nova venda</button><button class="secondary" id="newPackage" type="button">+ Pacote</button></div></div><div id="commercialMsg"></div><div class="hidden" id="packageFormCard"><h3>Cadastro de pacote</h3><form id="packageForm" novalidate=""><div id="packageSaveMsg" role="status" aria-live="polite"></div><input id="packageId" type="hidden"/><div class="grid"><label>Nome do pacote<input id="packageName" maxlength="160" required=""/></label><label>Tipo de evento<input id="packageType" placeholder="Ex.: Infantil, Casamento"/></label><label>Preço (R$)<input id="packagePrice" min="0" required="" step="0.01" type="number"/></label><label>Descrição<input id="packageDescription"/></label><label>Convite no briefing<select id="packageBriefingInvite"><option value="">Definir ao criar briefing</option><option value="true">Inclui convite</option><option value="false">Sem convite</option></select></label><label>Peças padrão no briefing<input id="packageBriefingItems" maxlength="1500" placeholder="Ex.: save the date e tag"/></label></div><div class="toolbar"><button type="submit">Salvar pacote</button><button class="secondary" id="cancelPackage" type="button">Cancelar</button></div></form></div><div class="hidden" id="saleFormCard"><h3>Cadastro de venda</h3><form id="saleForm" novalidate=""><input id="saleId" type="hidden"/><div class="grid"><label>Cliente<select id="saleClient" required=""></select></label><label>Evento<select id="saleEvent"><option value="">Sem evento</option></select></label><label>Pacote<select id="salePackage"><option value="">Sem pacote</option></select></label><label>Descrição da venda<input id="saleDescription" maxlength="300" required=""/></label><label>Data do recebimento (Pix)<input id="saleDate" required="" type="date"/></label><label>Valor recebido (R$)<input id="saleTotal" min="0" required="" step="0.01" type="number"/></label><label>Observações<input id="saleNotes"/></label></div><p class="muted small">Cadastre a venda somente após o recebimento integral do Pix. Ela aparecerá automaticamente como paga no Financeiro.</p><div class="toolbar"><button type="submit">Salvar venda</button><button class="secondary" id="cancelSale" type="button">Cancelar</button><button class="secondary" id="deleteSale" style="display:none" type="button">Excluir venda</button></div></form></div><div id="packageDetails" class="package-details"><button type="button" id="togglePackages" class="package-toggle" aria-expanded="false" aria-controls="packageList"><span><strong>Pacotes cadastrados</strong><small class="muted" id="packageCount">Consulte ou edite seus pacotes quando precisar</small></span><span id="packageToggleLabel">Ver pacotes ▾</span></button><div class="muted hidden" id="packageList">Carregando...</div></div><h3>Vendas</h3><div class="muted" id="saleList">Carregando...</div></section><style>
+</div><div class="muted" id="eventList">Carregando eventos...</div></section><section class="card hidden" id="commercialPanel"><div class="top"><div><h2>Comercial · Vendas</h2><p class="muted small">Pacotes, vendas e parcelas no Supabase.</p></div><div class="toolbar"><button id="newSale" type="button">+ Nova venda</button><button class="secondary" id="newPackage" type="button">+ Pacote</button></div></div><div id="commercialMsg"></div><div class="hidden" id="packageFormCard"><h3>Cadastro de pacote</h3><form id="packageForm" novalidate=""><div id="packageSaveMsg" role="status" aria-live="polite"></div><input id="packageId" type="hidden"/><div class="grid"><label>Nome do pacote<input id="packageName" maxlength="160" required=""/></label><label>Tipo de evento<input id="packageType" placeholder="Ex.: Infantil, Casamento"/></label><label>Preço (R$)<input id="packagePrice" min="0" required="" step="0.01" type="number"/></label><label>Descrição<input id="packageDescription"/></label><label>Convite no briefing<select id="packageBriefingInvite"><option value="">Definir ao criar briefing</option><option value="true">Inclui convite</option><option value="false">Sem convite</option></select></label><label>Peças padrão no briefing<input id="packageBriefingItems" maxlength="1500" placeholder="Ex.: save the date e tag"/></label></div><div class="toolbar"><button type="submit">Salvar pacote</button><button class="secondary" id="cancelPackage" type="button">Cancelar</button></div></form></div><div class="hidden" id="saleFormCard"><h3>Cadastro de venda</h3><form id="saleForm" novalidate=""><input id="saleId" type="hidden"/><div class="grid"><label>Cliente<select id="saleClient" required=""></select></label><label>Evento<select id="saleEvent"><option value="">Sem evento</option></select></label><label>Pacote<select id="salePackage"><option value="">Sem pacote</option></select></label><label>Descrição da venda<input id="saleDescription" maxlength="300" required=""/></label><label>Data do fechamento<input id="saleDate" required="" type="date"/></label><label>Valor total da venda (R$)<input id="saleTotal" min="0" required="" step="0.01" type="number"/></label><label>Vencimento<input id="saleDue" type="date" required></label><label>Valor recebido (R$)<input id="saleReceived" type="number" min="0" step="0.01" value="0"></label><label>Data do recebimento<input id="saleReceivedAt" type="date"></label><label>Observações<input id="saleNotes"/></label></div><p class="muted small">A venda aparece no Financeiro como a receber. Informe aqui o valor já recebido ou confirme o recebimento pelo Financeiro.</p><div class="toolbar"><button type="submit">Salvar venda</button><button class="secondary" id="cancelSale" type="button">Cancelar</button><button class="secondary" id="deleteSale" style="display:none" type="button">Excluir venda</button></div></form></div><div id="packageDetails" class="package-details"><button type="button" id="togglePackages" class="package-toggle" aria-expanded="false" aria-controls="packageList"><span><strong>Pacotes cadastrados</strong><small class="muted" id="packageCount">Consulte ou edite seus pacotes quando precisar</small></span><span id="packageToggleLabel">Ver pacotes ▾</span></button><div class="muted hidden" id="packageList">Carregando...</div></div><h3>Vendas</h3><div class="muted" id="saleList">Carregando...</div></section><style>
 .crm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
 .crm-stat{background:#f8f3eb;border:1px solid #e9ddce;border-radius:12px;padding:14px}
 .crm-stat strong{display:block;font-size:25px;color:#294e3d}.crm-stat span{font-size:13px;color:#6e7a70}
@@ -183,7 +183,20 @@ body[data-page="clients"] #clientFormCard:not(.hidden),body[data-page="clients"]
 <button id="finSubmit" type="submit">Salvar lançamento</button>
 <button id="finCancel" type="button">Cancelar</button><button id="finDelete" type="button" class="secondary hidden" style="background:#f9e4df;color:#8c2b20">Excluir lançamento</button>
 </div>
-</form></div><h3>Lançamentos do mês</h3><div id="finList">Nenhum lançamento carregado.</div><div style="margin-top:12px"><button id="finAuditToggle" type="button" class="secondary">Histórico de exclusões</button><div id="finAuditPanel" class="hidden" style="margin-top:12px"><div id="finAuditList">Clique para carregar o histórico.</div></div></div><div style="margin-top:16px"><button id="finAddCategory" type="button">+ Categoria</button></div><div class="card" style="margin:18px 0;padding:18px">
+</form></div><div id="receiptEditor" class="card hidden">
+<h3>Editar recebimento</h3><p id="receiptTitle" class="muted"></p>
+<form id="receiptForm">
+<div class="grid">
+<label>Valor total (R$)<input id="receiptAmount" type="number" min="0.01" step="0.01" required></label>
+<label>Vencimento<input id="receiptDue" type="date" required></label>
+<label>Valor recebido (R$)<input id="receiptPaid" type="number" min="0" step="0.01" required></label>
+<label>Data do recebimento<input id="receiptPaidAt" type="date"></label>
+</div>
+<p id="receiptStatus" role="status"></p>
+<div class="toolbar"><button id="saveReceipt" type="submit">Salvar recebimento</button><button id="cancelReceipt" type="button" class="secondary">Cancelar</button></div>
+</form>
+</div>
+<h3>Lançamentos do mês</h3><div id="finList">Nenhum lançamento carregado.</div><div style="margin-top:12px"><button id="finAuditToggle" type="button" class="secondary">Histórico de exclusões</button><div id="finAuditPanel" class="hidden" style="margin-top:12px"><div id="finAuditList">Clique para carregar o histórico.</div></div></div><div style="margin-top:16px"><button id="finAddCategory" type="button">+ Categoria</button></div><div class="card" style="margin:18px 0;padding:18px">
 <h3>Fechamento mensal</h3>
 <p id="closeSummary">Confira os lançamentos antes de fechar o mês.</p>
 <p id="closeStatus"></p>
@@ -353,9 +366,9 @@ const val=id=>$(id).value;
 function fillEventClients(){const prev=val('eventClient');$('eventClient').innerHTML='<option value="">Selecione a cliente</option>'+clientCache.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.full_name)+'</option>').join('');if(clientCache.some(c=>c.id===prev))$('eventClient').value=prev;fillEventChildren()}
 function fillEventChildren(){const c=clientCache.find(c=>c.id===val('eventClient'));const prev=val('eventChild');$('eventChild').innerHTML='<option value="">Não vincular</option>'+(c?.client_children||[]).map(k=>'<option value="'+esc(k.id)+'">'+esc(k.first_name)+'</option>').join('');if((c?.client_children||[]).some(k=>k.id===prev))$('eventChild').value=prev}
 $('eventClient').addEventListener('change',()=>{ $('eventChild').value='';fillEventChildren() });
-function editEvent(id=''){if(!canAccess('events',id?'edit':'create'))return;const e=eventCache.find(x=>x.id===id);$('eventForm').reset();$('eventId').value=e?.id||'';$('eventDue').readOnly=!!window.eventHasBriefing?.(id);fillEventClients();if(e){$('eventClient').value=e.client_id;fillEventChildren();$('eventChild').value=e.child_id||'';for(const [field,key] of Object.entries({eventTitle:'title',eventType:'event_type',eventDate:'event_date',eventDue:'identity_due_date',eventNotes:'notes'}))$(field).value=e[key]||''} const oldSale=salesCache.find(x=>x.event_id===id);$('eventPackage').innerHTML='<option value="">Selecione o pacote</option>'+packagesCache.filter(p=>p.active||p.id===oldSale?.package_id).map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' · '+brl(p.price)+'</option>').join('');$('eventPackage').value=oldSale?.package_id||'';$('eventSaleAmount').value=oldSale?.total_amount||'';$('eventSaleDate').value=oldSale?.sale_date||'';$('deleteEvent').classList.toggle('hidden',!e||!canAccess('events','delete'));$('deleteEvent').hidden=!canAccess('events','delete');$('eventFormCard').classList.remove('hidden');if(!id&&openMobileForm('eventFormCard','Novo evento','eventMsg'))return;$('eventsPanel').scrollIntoView({behavior:'smooth'})}
+function editEvent(id=''){if(!canAccess('events',id?'edit':'create'))return;const e=eventCache.find(x=>x.id===id);$('eventForm').reset();$('eventId').value=e?.id||'';$('eventDue').readOnly=!!window.eventHasBriefing?.(id);fillEventClients();if(e){$('eventClient').value=e.client_id;fillEventChildren();$('eventChild').value=e.child_id||'';for(const [field,key] of Object.entries({eventTitle:'title',eventType:'event_type',eventDate:'event_date',eventDue:'identity_due_date',eventNotes:'notes'}))$(field).value=e[key]||''} const oldSale=salesCache.find(x=>x.event_id===id);for(const field of ['eventClient','eventPackage','eventSaleAmount','eventSaleDate'])$(field).disabled=!!oldSale?.briefing_generated||!!window.eventHasBriefing?.(id);$('eventPackage').innerHTML='<option value="">Selecione o pacote</option>'+packagesCache.filter(p=>p.active||p.id===oldSale?.package_id).map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+' · '+brl(p.price)+'</option>').join('');$('eventPackage').value=oldSale?.package_id||'';$('eventSaleAmount').value=oldSale?.total_amount||'';$('eventSaleDate').value=oldSale?.sale_date||'';$('deleteEvent').classList.toggle('hidden',!e||!canAccess('events','delete'));$('deleteEvent').hidden=!canAccess('events','delete');$('eventFormCard').classList.remove('hidden');if(!id&&openMobileForm('eventFormCard','Novo evento','eventMsg'))return;$('eventsPanel').scrollIntoView({behavior:'smooth'})}
 $('newEvent').onclick=async()=>{if(!canAccess('events','create'))return;await loadCommercial();if(!clientCache.length){msg('eventMsg','Cadastre uma cliente antes de criar o evento.',true);return}editEvent()};
-$('cancelEvent').onclick=()=>$('eventFormCard').classList.add('hidden');$('deleteEvent').onclick=async()=>{const id=$('eventId').value,e=eventCache.find(x=>x.id===id);if(!e||!canAccess('events','delete'))return;const b=$('deleteEvent');b.disabled=true;try{const {count,error:err}=await api.from('sales').select('id',{count:'exact',head:true}).eq('company_id',$('company').value).eq('event_id',id);if(err)throw err;if(count)throw Error('Este evento possui venda vinculada. Resolva a venda antes de excluir o evento.');if(!confirm('Excluir definitivamente o evento "'+e.title+'"? Esta ação não pode ser desfeita.'))return;const {data,error}=await api.rpc('mama_event_delete',{p_event:id});if(error)throw error;if(!data)throw Error('Exclusão não autorizada pelo banco.');$('eventFormCard').classList.add('hidden');await loadEvents();msg('eventMsg','Evento excluído com sucesso.')}catch(err){msg('eventMsg','Não foi possível excluir: '+err.message,true)}finally{b.disabled=false}};
+$('cancelEvent').onclick=()=>$('eventFormCard').classList.add('hidden');$('deleteEvent').onclick=async()=>{const id=$('eventId').value,e=eventCache.find(x=>x.id===id);if(!e||!canAccess('events','delete'))return;const b=$('deleteEvent');b.disabled=true;try{if(!confirm('Excluir definitivamente o evento "'+e.title+'"? Esta ação não pode ser desfeita.'))return;const {data,error}=await api.rpc('mama_event_delete',{p_event:id});if(error)throw error;if(!data)throw Error('Exclusão não autorizada pelo banco.');$('eventFormCard').classList.add('hidden');await loadEvents();msg('eventMsg','Evento excluído com sucesso.')}catch(err){msg('eventMsg','Não foi possível excluir: '+err.message,true)}finally{b.disabled=false}};
 function eventToday(){const now=new Date();return [now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-')}
  function updateEventStats(){
  const dates=eventCache.map(e=>typeof e.event_date==='string'?e.event_date.slice(0,10):'').filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d));
@@ -417,7 +430,7 @@ $('eventForm').onsubmit=async ev=>{ev.preventDefault();if(!canAccess('events',va
  if(!val('eventTitle').trim()){msg('eventMsg','Informe o título do evento.',true);return}
  if(!val('eventDate')){msg('eventMsg','Informe a data do evento.',true);return}
  const amountText=val('eventSaleAmount'),pixDate=val('eventSaleDate'),packageId=val('eventPackage');
- const hasSale=!!(amountText||pixDate||packageId);if(hasSale&&!canAccess('sales',salesCache.some(x=>x.event_id===val('eventId'))?'edit':'create')){msg('eventMsg','Sem permissão para registrar vendas.',true);return}
+ const hasSale=!$('eventPackage').disabled&&!!(amountText||pixDate||packageId);if(hasSale&&!canAccess('sales',salesCache.some(x=>x.event_id===val('eventId'))?'edit':'create')){msg('eventMsg','Sem permissão para registrar vendas.',true);return}
  if(hasSale&&(!packageId||!pixDate||!Number.isFinite(Number(amountText))||Number(amountText)<=0)){
   msg('eventMsg','Para registrar a venda, informe pacote, valor recebido e data do Pix. Se ainda não recebeu, deixe os três campos vazios.',true);return;
  }
@@ -462,7 +475,7 @@ function setCommercialOptions(){
 }
 function fillSaleEvents(){const prev=$('saleEvent').value;$('saleEvent').innerHTML='<option value="">Sem evento</option>'+eventCache.filter(e=>e.client_id===$('saleClient').value).map(e=>'<option value="'+esc(e.id)+'">'+esc(e.title)+'</option>').join('');if([...$('saleEvent').options].some(o=>o.value===prev))$('saleEvent').value=prev}
 $('saleClient').addEventListener('change',fillSaleEvents);
-$('salePackage').addEventListener('change',()=>{const p=packagesCache.find(x=>x.id===$('salePackage').value);if(p){$('saleDescription').value=p.name;$('saleTotal').value=p.price}});
+$('salePackage').addEventListener('change',()=>{const p=packagesCache.find(x=>x.id===$('salePackage').value);if(p){$('saleDescription').value=p.name;if(!$('saleTotal').disabled)$('saleTotal').value=p.price}});
 $('newPackage').onclick=()=>{if(!canAccess('packages','create'))return;$('packageForm').reset();$('packageId').value='';$('packageFormCard').classList.remove('hidden');$('saleFormCard').classList.add('hidden');openMobileForm('packageFormCard','Novo pacote','commercialMsg')};
 $('cancelPackage').onclick=()=>$('packageFormCard').classList.add('hidden');
 $('packageForm').onsubmit=async e=>{
@@ -509,7 +522,14 @@ function openSale(id=''){if(!canAccess('sales',id?'edit':'create'))return;
   $('salePackage').value=sale.package_id||'';$('saleDescription').value=sale.description;
   $('saleTotal').value=sale.total_amount;$('saleNotes').value=sale.notes||'';
  }
- $('deleteSale').style.display=sale&&!isStaff()?'inline-block':'none';
+ const installments=sale?.sale_installments||[];
+ const multi=installments.length>1;
+ $('saleDue').value=installments.map(i=>i.due_date).sort()[0]||$('saleDate').value;
+ $('saleReceived').value=installments.reduce((n,i)=>n+Number(i.paid_amount||0),0);
+ $('saleReceivedAt').value=installments.map(i=>i.paid_at).filter(Boolean).sort().at(-1)||'';
+ for(const field of ['saleTotal','saleDue','saleReceived','saleReceivedAt'])$(field).disabled=multi;
+ for(const field of ['saleClient','saleEvent','salePackage'])$(field).disabled=!!sale?.briefing_generated;
+ $('deleteSale').style.display=sale&&canAccess('sales','delete')?'inline-block':'none';
  $('saleFormCard').classList.remove('hidden');$('packageFormCard').classList.add('hidden');
  if(!id&&openMobileForm('saleFormCard','Nova venda','commercialMsg'))return;
  $('commercialPanel').scrollIntoView({behavior:'smooth'});
@@ -517,49 +537,28 @@ function openSale(id=''){if(!canAccess('sales',id?'edit':'create'))return;
 $('newSale').onclick=()=>{if(!canAccess('sales','create'))return;if(!clientCache.length){msg('commercialMsg','Cadastre uma cliente primeiro.',true);return}openSale()};
 $('cancelSale').onclick=()=>$('saleFormCard').classList.add('hidden');
 $('saleForm').onsubmit=async e=>{
- e.preventDefault();if(!canAccess('sales',$('saleId').value?'edit':'create')){msg('commercialMsg','Sem permissão para salvar vendas.',true);return}const b=$('saleForm').querySelector('button[type=submit]');if(b.disabled)return;
- b.disabled=true;let createdId=null;
+ e.preventDefault();const id=val('saleId');
+ if(!canAccess('sales',id?'edit':'create'))return;
+ const button=$('saleForm').querySelector('button[type=submit]');
+ if(button.disabled)return;
+ button.disabled=true;
  try{
-  const id=$('saleId').value,cid=$('company').value;
-  const amount=Number($('saleTotal').value),date=$('saleDate').value;
-  if(!$('saleClient').value)throw Error('Selecione uma cliente.');
-  if(!$('saleDescription').value.trim())throw Error('Informe a descrição da venda.');
-  if(!date)throw Error('Informe a data do recebimento.');
-  if(!Number.isFinite(amount)||amount<=0)throw Error('Informe um valor recebido maior que zero.');
-  const payload={company_id:cid,client_id:$('saleClient').value,event_id:$('saleEvent').value||null,
-   package_id:$('salePackage').value||null,description:$('saleDescription').value.trim(),sale_date:date,
-   total_amount:amount,status:'approved',notes:$('saleNotes').value||null};
-  let saleId=id;
-  if(id){
-   const {error}=await api.from('sales').update(payload).eq('id',id).eq('company_id',cid);
-   if(error)throw error;
-  }else{
-   const {data,error}=await api.from('sales').insert(payload).select('id').single();
-   if(error)throw error;createdId=data.id;saleId=data.id;
-  }
-  // One payment record, always fully received. Existing old installments are replaced.
-  const {data:existing,error:readError}=await api.from('sale_installments').select('id').eq('sale_id',saleId);
-  if(readError)throw readError;
-  const payment={sale_id:saleId,installment_number:1,due_date:date,amount:amount,paid_amount:amount,paid_at:date};
-  if(existing?.length){
-   const first=existing[0].id;
-   const {error}=await api.from('sale_installments').update(payment).eq('id',first);
-   if(error)throw error;
-   if(existing.length>1){
-    const {error:deleteError}=await api.from('sale_installments').delete().eq('sale_id',saleId).neq('id',first);
-    if(deleteError)throw deleteError;
-   }
-  }else{
-   const {error}=await api.from('sale_installments').insert(payment);
-   if(error)throw error;
-  }
+  const sale=salesCache.find(s=>s.id===id),total=Number(val('saleTotal')),paid=Number(val('saleReceived')||0);
+  if(!val('saleClient')||!val('saleDate')||!val('saleDue')||!val('saleDescription').trim())throw Error('Preencha cliente, descrição e datas.');
+  if(!Number.isFinite(total)||total<=0||!Number.isFinite(paid)||paid<0||paid>total)throw Error('Confira o valor total e o valor recebido.');
+  const {data,error}=await api.rpc('mama_sale_save',{
+   p_id:id||null,p_company:val('company'),p_client:val('saleClient'),p_event:val('saleEvent')||null,
+   p_package:val('salePackage')||null,p_description:val('saleDescription').trim(),p_sale_date:val('saleDate'),
+   p_total:total,p_due:val('saleDue'),p_paid:paid,p_paid_at:paid>0?(val('saleReceivedAt')||eventToday()):null,
+   p_notes:val('saleNotes'),p_expected_updated:sale?.updated_at||null
+  });
+  if(error||!data)throw error||Error('A venda não foi confirmada.');
   $('saleFormCard').classList.add('hidden');await loadCommercial();
-  msg('commercialMsg','Venda salva! Pix recebido integralmente e lançado no Financeiro.');
- }catch(err){
-  msg('commercialMsg',(createdId?'Venda criada, mas não foi possível concluir o registro do recebimento. Edite a venda na lista; não cadastre outra. ':'Erro ao salvar: ')+err.message,true);
-  await loadCommercial();
- }finally{b.disabled=false}
+  msg('commercialMsg','Venda salva e sincronizada com o Financeiro.');
+ }catch(e){msg('commercialMsg','Não foi possível salvar: '+e.message,true)}
+ finally{button.disabled=false}
 };
+
 $('deleteSale').onclick=async()=>{if(!canAccess('sales','delete'))return;
  const id=$('saleId').value;if(!id)return;
  if(!confirm('Excluir esta venda e seu recebimento? Esta ação não pode ser desfeita.'))return;
@@ -580,7 +579,7 @@ async function loadCommercial(){if(!api||!$('company').value)return;$('commercia
  const pack=packagesCache.find(p=>p.id===x.package_id);
  const field=(label,value)=>'<div class="sale-detail-field"><span>'+esc(label)+'</span><strong>'+esc(value||'Não informado')+'</strong></div>';
  return '<details class="sale-event-card"><summary><span class="sale-event-overview"><strong>'+esc(event?.title||'Venda sem evento vinculado')+'</strong><span>'+esc(client?.full_name||'Cliente não informado')+(event?.event_date?' · Festa: '+dateBR(event.event_date):'')+'</span><span>'+esc(pack?.name||x.description)+'</span></span><span class="sale-event-total"><strong>'+brl(x.total_amount)+'</strong><span>'+(isPaid?'Recebido':'Recebimento pendente')+'</span><span class="sale-detail-hint">Ver detalhes ⌄</span></span></summary><div class="sale-event-details"><div class="sale-detail-grid">'+
- field('Evento',event?.title)+field('Data do evento',event?.event_date?dateBR(event.event_date):null)+field('Cliente',client?.full_name)+field('Pacote',pack?.name||x.description)+field('Data da venda',dateBR(x.sale_date))+field('Valor total',brl(x.total_amount))+field('Recebido',brl(paid))+field('Situação',statusNames[x.status]||x.status)+
+ field('Evento',event?.title)+field('Data do evento',event?.event_date?dateBR(event.event_date):null)+field('Cliente',client?.full_name)+field('Pacote',pack?.name||x.description)+field('Fechamento',dateBR(x.sale_date))+field('Valor total',brl(x.total_amount))+field('Recebido',brl(paid))+field('Situação',statusNames[x.status]||x.status)+
  (event?.identity_due_date?field('Entrega da identidade',dateBR(event.identity_due_date)):'')+'</div>'+
  (event?.notes?'<p class="sale-detail-note"><strong>Observações do evento</strong><br>'+esc(event.notes)+'</p>':'')+
  '<div class="sale-receipts"><h3>Recebimentos</h3>'+((x.sale_installments||[]).map(i=>'<p>'+dateBR(i.paid_at||i.due_date)+' · '+brl(i.paid_amount||0)+(i.paid_at?' recebido':' · sem data de recebimento')+'</p>').join('')||'<p class="muted">Nenhum recebimento registrado.</p>')+'</div>'+
@@ -660,7 +659,7 @@ setInterval(refreshMemberPermissions,30000);
 (()=>{
 'use strict';
 const $f=id=>document.getElementById(id);
-let rows=[],cats=[],recRules=[],monthClosing=null,editing=false,loading=false,finTab='monthly';
+let rows=[],cats=[],recRules=[],monthClosing=null,editing=false,loading=false,refreshQueued=false,finTab='monthly';
 let saleFinanceRows=[];
 const money=n=>Number(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const dateBR=d=>{if(!d)return '—';const v=String(d).slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(v)?v.slice(8,10)+'/'+v.slice(5,7)+'/'+v.slice(0,4):v};
@@ -675,7 +674,7 @@ function catOptions(){
  if(cats.some(c=>c.id===selected&&c.kind===kind))$f('finCategory').value=selected;
 }
 async function refresh(){
- if(loading)return;
+ if(loading){refreshQueued=true;return;}
  loading=true;
  try{
   feedback('Carregando dados...');
@@ -687,13 +686,14 @@ async function refresh(){
    db.from('financial_categories').select('*').eq('company_id',cid).order('name'),
    db.from('financial_recurring_rules').select('*').eq('company_id',cid).order('description'),
    db.from('financial_month_closings').select('*').eq('company_id',cid).eq('month_start',start),
-   db.from('sales').select('id,description,status,sale_installments(id,due_date,amount,paid_amount,paid_at)').eq('company_id',cid)
+   db.from('sales').select('id,description,status,events(title),clients(full_name),sale_installments(id,due_date,amount,paid_amount,paid_at)').eq('company_id',cid)
   ]);
   if(entries.error)throw entries.error;
   if(categories.error)throw categories.error;
   if(recurrings.error)throw recurrings.error;
   if(closings.error)throw closings.error;
   if(saleData.error)throw saleData.error;
+  if(company()!==cid){refreshQueued=true;return}
   rows=entries.data||[];cats=categories.data||[];recRules=recurrings.data||[];monthClosing=(closings.data||[])[0]||null;
   // Create monthly entries automatically, before calculating totals.
   if(!monthClosing){
@@ -721,8 +721,8 @@ async function refresh(){
   }
   saleFinanceRows=(saleData.data||[]).filter(s=>!['cancelled','canceled','cancelada'].includes((s.status||'').toLowerCase())).flatMap(s=>
    (s.sale_installments||[]).filter(i=>i.due_date>=start&&i.due_date<end).map(i=>({
-    id:i.id,kind:'income',description:'Venda: '+s.description,amount:i.amount,paid_amount:i.paid_amount||0,
-    due_date:i.due_date,paid_at:i.paid_at,source:'sale',sale_id:s.id
+    id:i.id,kind:'income',description:[s.events?.title,s.clients?.full_name,s.description].filter(Boolean).join(' · '),amount:i.amount,paid_amount:i.paid_amount||0,
+    due_date:i.due_date,paid_at:i.paid_at,source:'sale',sale_id:s.id,companyId:cid
    }))
   );
   catOptions();renderExtras();
@@ -733,13 +733,71 @@ async function refresh(){
   $f('finPaid').textContent=money(sum('expense','paid_amount'));
   $f('finList').innerHTML=(rows.length+saleFinanceRows.length)?`<div class="rec-table-wrap"><table class="rec-table fin-entries-table"><thead><tr><th>Vencimento</th><th>Descrição</th><th>Tipo</th><th>Valor previsto</th><th>Pago / recebido</th><th>Situação</th><th>Ações</th></tr></thead><tbody>${[...rows,...saleFinanceRows].sort((a,b)=>a.due_date.localeCompare(b.due_date)).map(r=>{
     const paid=Number(r.paid_amount||0),amount=Number(r.amount||0);
-    const status=paid>=amount?'Pago':paid>0?'Parcial':'Pendente';
-    return `<tr><td>${dateBR(r.due_date)}</td><td class="rec-description">${escape(r.description)}</td><td><span class="rec-tag ${r.kind==='income'?'income':'expense'}"><span class="fin-type-icon" aria-hidden="true">${r.kind==='income'?'↗':'↘'}</span> ${/\[recurring:[0-9a-f-]{36}\]/i.test(r.notes||'')?(r.kind==='income'?'Receita recorrente':'Despesa recorrente'):(r.kind==='income'?'Receita':'Despesa')}</span></td><td>${money(amount)}</td><td>${money(paid)}</td><td><span class="fin-payment-status ${paid>=amount?'paid':paid>0?'partial':'pending'}">${status}</span>${canQuickPay(r)?`<button type="button" class="quick-pay-action" data-fin-pay="${r.id}">Marcar como paga</button>`:''} </td><td>${r.source==='sale'?'<span class="rec-status on" title="Gerencie o recebimento na aba Comercial">Comercial</span>':`<button type="button" data-fin-edit="${r.id}">Editar</button>`}</td></tr>`;
+    const status=paid>=amount?(r.kind==='income'?'Recebido':'Pago'):paid>0?'Parcial':r.kind==='income'?'A receber':'Pendente';
+    return `<tr><td>${dateBR(r.due_date)}</td><td class="rec-description">${escape(r.description)}</td><td><span class="rec-tag ${r.kind==='income'?'income':'expense'}"><span class="fin-type-icon" aria-hidden="true">${r.kind==='income'?'↗':'↘'}</span> ${/\[recurring:[0-9a-f-]{36}\]/i.test(r.notes||'')?(r.kind==='income'?'Receita recorrente':'Despesa recorrente'):(r.kind==='income'?'Receita':'Despesa')}</span></td><td>${money(amount)}</td><td>${money(paid)}${r.paid_at&&paid>0?`<br><small class="muted">${dateBR(r.paid_at)}</small>`:''}</td><td><span class="fin-payment-status ${paid>=amount?'paid':paid>0?'partial':'pending'}">${status}</span>${canQuickPay(r)?`<button type="button" class="quick-pay-action" data-fin-pay="${r.id}">Marcar como paga</button>`:''}${canReceiveSale(r)?`<button type="button" class="quick-pay-action" data-sale-receive="${r.id}">Marcar como recebido</button>`:''} </td><td>${r.source==='sale'?(canAccess('finance','edit')&&!monthClosing?`<button type="button" data-sale-receipt-edit="${r.id}">Editar recebimento</button>`:'<span class="rec-status on">Comercial</span>'):`<button type="button" data-fin-edit="${r.id}">Editar</button>`}</td></tr>`;
    }).join('')}</tbody></table></div>`:'<p>Nenhum lançamento neste mês.</p>';
   feedback('Dados carregados. '+rows.length+' lançamento(s) e '+saleFinanceRows.length+' recebimento(s) de vendas.');
  }catch(e){feedback('Erro ao carregar: '+(e.message||e),true)}
- finally{loading=false}
+ finally{loading=false;if(refreshQueued){refreshQueued=false;await refresh()}}
 }
+
+let receiptEditingRow=null;
+function canReceiveSale(row){
+ return row.source==='sale'&&row.companyId===company()&&Number(row.amount)>Number(row.paid_amount||0)&&!monthClosing&&canAccess('finance','edit');
+}
+function receiptPayload(row,amount,paid,due,paidAt){
+ return {p_installment:row.id,p_amount:amount,p_paid:paid,p_due:due,p_paid_at:paid>0?paidAt:null,
+  p_expected_amount:Number(row.amount),p_expected_paid:Number(row.paid_amount||0),
+  p_expected_due:row.due_date,p_expected_paid_at:row.paid_at||null};
+}
+async function markSaleReceived(id,button){
+ const row=saleFinanceRows.find(r=>r.id===id);
+ if(button.disabled||!row||!canReceiveSale(row))return;
+ button.disabled=true;button.textContent='Salvando…';
+ try{
+  const {error}=await getDb().rpc('mama_receipt_update',receiptPayload(row,Number(row.amount),Number(row.amount),row.due_date,today()));
+  if(error)throw error;
+  row.paid_amount=row.amount;row.paid_at=today();
+  await refresh();
+  feedback('Recebimento confirmado. Você pode corrigir os dados em Editar recebimento.');
+ }catch(e){feedback('Não foi possível confirmar: '+e.message,true);button.disabled=false;button.textContent='Marcar como recebido'}
+}
+function editSaleReceipt(id){
+ const row=saleFinanceRows.find(r=>r.id===id);
+ if(!row||row.companyId!==company()||monthClosing||!canAccess('finance','edit'))return;
+ receiptEditingRow={...row};
+ $f('receiptTitle').textContent=row.description;
+ $f('receiptAmount').value=row.amount;
+ $f('receiptPaid').value=row.paid_amount||0;
+ $f('receiptDue').value=row.due_date;
+ $f('receiptPaidAt').value=row.paid_at||'';
+ $f('receiptStatus').textContent='';
+ $f('receiptEditor').classList.remove('hidden');
+ if(!openMobileForm('receiptEditor','Editar recebimento'))$f('receiptEditor').scrollIntoView({block:'nearest'});
+}
+$f('cancelReceipt').onclick=()=>$f('receiptEditor').classList.add('hidden');
+$f('receiptForm').onsubmit=async e=>{
+ e.preventDefault();const row=receiptEditingRow,button=$f('saveReceipt');
+ if(!row||button.disabled||!canAccess('finance','edit')||row.companyId!==company())return;
+ button.disabled=true;
+ try{
+  const amount=Number($f('receiptAmount').value),paid=Number($f('receiptPaid').value);
+  if(!Number.isFinite(amount)||amount<=0||!Number.isFinite(paid)||paid<0||paid>amount)throw Error('Confira o valor total e o valor recebido.');
+  const {error}=await getDb().rpc('mama_receipt_update',receiptPayload(row,amount,paid,$f('receiptDue').value,$f('receiptPaidAt').value||today()));
+  if(error)throw error;
+  $f('receiptEditor').classList.add('hidden');
+  receiptEditingRow=null;
+  await refresh();
+  feedback('Recebimento atualizado e sincronizado com a venda.');
+ }catch(e){$f('receiptStatus').textContent=e.message}
+ finally{button.disabled=false}
+};
+$f('finList').addEventListener('click',e=>{
+ const receive=e.target.closest('[data-sale-receive]'),editReceipt=e.target.closest('[data-sale-receipt-edit]');
+ if(receive)markSaleReceived(receive.dataset.saleReceive,receive);
+ if(editReceipt)editSaleReceipt(editReceipt.dataset.saleReceiptEdit);
+});
+$f('company').addEventListener('change',()=>{receiptEditingRow=null;$f('receiptEditor').classList.add('hidden')});
 
 function canQuickPay(row){
  return row.source!=='sale'&&row.kind==='expense'&&Number(row.amount)>Number(row.paid_amount||0)&&!monthClosing&&canAccess('finance','edit');
@@ -1003,7 +1061,7 @@ function navigate(page){
  if(page==='team'&&typeof loadTeamPermissions==='function')loadTeamPermissions();
  if(page==='crm')loadCrmRadar();
 }
-document.addEventListener('click',e=>{const b=e.target.closest('button[data-page], a[data-page], [role="button"][data-page]');if(b){e.preventDefault();navigate(b.dataset.page)}});
+document.addEventListener('click',e=>{const b=e.target.closest('button[data-page], a[data-page], [role="button"][data-page]');if(b){e.preventDefault();if(b.dataset.receiptMonth){$f('finMonth').value=b.dataset.receiptMonth;finTab='monthly'}navigate(b.dataset.page)}});
 
 function renderExtras(){
  const cat=$f('recCategory'),old=cat.value;
@@ -1641,4 +1699,4 @@ html:has(#projectDialog[open]),body:has(#projectDialog[open]){overflow:hidden}
 #briefingsPanel #briefingSection{padding:0;border:0;background:transparent;margin:0}
 #briefingsPanel #briefingHeading{font:400 35px/1.15 Georgia,serif}
 @media(max-width:760px){.calendar-days{gap:4px}.calendar-days button{min-height:52px;padding:7px 5px;font-size:13px}.studio-page-top h2,#briefingsPanel #briefingHeading{font-size:30px}.production-board{grid-template-columns:minmax(0,1fr);overflow:visible}.production-column{min-height:0}.studio-focus{gap:6px}.studio-focus button{padding:12px 9px;font-size:11px}.studio-focus strong{font-size:27px}.studio-dialog input,.studio-dialog select,.studio-dialog textarea{font-size:16px}.studio-hero{padding:24px;min-height:0}.studio-hero h1{font-size:35px}.studio-hero p{font-size:13px}}
-</style><script src="/manager-briefings.js?v=2"></script><script src="/manager-agenda.js?v=2"></script></body></html>
+</style><style>#receiptEditor{background:#faf5ee}#receiptStatus{color:#91472e}#mobileFormDialog #receiptEditor{padding:0;margin:0;border:0;background:transparent;box-shadow:none}#mobileFormDialog #receiptEditor>h3{display:none}</style><script src="/manager-briefings.js?v=3"></script><script src="/manager-agenda.js?v=2"></script></body></html>
