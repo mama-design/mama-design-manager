@@ -60,11 +60,16 @@ function renderStudioBoard(){
  }).join('');
 }
 function renderStudioFocus(){
- const today=briefingLocalDay();
  const waiting=[...briefingRecords.values()].filter(b=>!b.submitted_at).length;
- const upcoming=eventCache.filter(e=>studioStage(e)!=='done'&&studioDates(e).some(d=>d.kind==='internal'&&d.date<=today||d.kind==='promised'&&d.date===today)).length;
+ const scheduled=eventCache.filter(event=>{
+  const briefing=briefingRecords.get(event.id);
+  const stage=studioStage(event);
+  return (!briefing||briefing.submitted_at)
+   && ['queue','creating','adjustments'].includes(stage)
+   && studioDates(event).some(entry=>entry.date);
+ }).length;
  const creating=eventCache.filter(e=>['creating','adjustments'].includes(studioStage(e))).length;
- $('studioFocus').innerHTML='<button type="button" data-page="agenda"><strong>'+upcoming+'</strong>Prévias pedindo atenção</button><button type="button" data-page="briefings"><strong>'+waiting+'</strong>Aguardando briefing</button><button type="button" data-page="agenda" data-start-board><strong>'+creating+'</strong>Em criação ou ajustes</button>';
+ $('studioFocus').innerHTML='<button type="button" data-page="agenda"><strong>' +scheduled+'</strong>Prévias na agenda</button><button type="button" data-page="briefings"><strong>'+waiting+'</strong>Aguardando briefing</button><button type="button" data-page="agenda" data-start-board><strong>'+creating+'</strong>Em criação ou ajustes</button>';
 }
 async function loadStudioAgenda(){
  if(!api||!canAccess('events','view'))return;
