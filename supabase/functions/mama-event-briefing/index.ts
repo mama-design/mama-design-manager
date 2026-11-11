@@ -52,10 +52,13 @@ const fields: Record<string,number> = {
   title:200, event_date:10, start_time:5, end_time:5, theme:1500, colors:1000, style:1500,
   details:2500, venue:300, address:500, invite_phrase:1200, pieces:2500, links:3000,
 };
-function readAnswers(form: FormData, invite: boolean, items: string) {
+const weddingFields = {wedding_story:1200,wedding_monogram:500,wedding_reception:1000,wedding_invite_details:1200};
+const debutanteFields = {debutante_personality:1200,debutante_symbol:800,debutante_moments:1000,debutante_invite_details:1200};
+function readAnswers(form: FormData, invite: boolean, items: string, type: string) {
+  const extra=type==='Casamento'?weddingFields:type==='15 anos'?debutanteFields:{};
   const answers: Record<string,string> = {};
-  for (const [field, limit] of Object.entries(fields)) {
-    if ((!invite && field === 'invite_phrase') || (!items && field === 'pieces')) continue;
+  for (const [field, limit] of Object.entries({...fields,...extra})) {
+    if ((!invite && (field === 'invite_phrase' || field.endsWith('_invite_details'))) || (!items && field === 'pieces')) continue;
     const value = form.get(field);
     if (typeof value === 'string' && value.trim()) answers[field] = value.trim().slice(0,limit);
   }
@@ -109,7 +112,7 @@ Deno.serve(async (req: Request) => {
       return reply({error:'As fotos passaram do limite de tamanho.'},413);
     }
     const form = await req.formData();
-    const answers = readAnswers(form,briefing.includes_invite,briefing.items);
+    const answers = readAnswers(form,briefing.includes_invite,briefing.items,briefing.event_type);
     if (!answers || answers.event_date < briefing.closed_on) {
       return reply({error:'Confira o nome, a data, os horários e os links das referências.'},400);
     }

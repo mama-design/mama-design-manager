@@ -23,6 +23,7 @@ form section+section{border-top:1px solid var(--line);padding-top:20px;margin-to
 .file-list div{background:#f1eee5;border-radius:8px;padding:7px;min-width:0}.file-list img{display:block;width:100%;height:70px;object-fit:cover;border-radius:5px}.file-list small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-list button{margin-top:5px;padding:6px;background:transparent;color:var(--green);font-size:.8rem}
 #status{margin:10px 0;color:var(--terra);overflow-wrap:anywhere}#status:empty,[hidden]{display:none}
 @media(max-width:520px){button[type=submit],#start{width:100%}}
+label span.question{font:inherit;color:inherit}
 </style>
 </head>
 <body>
@@ -44,24 +45,38 @@ form section+section{border-top:1px solid var(--line);padding-top:20px;margin-to
 </section>
 <form class="card" id="briefing" hidden>
 <section>
-<h1>Vamos criar sua identidade visual?</h1>
+<h1 id="briefingTitle">Vamos criar sua identidade visual?</h1>
 <p>Me conta o que você imaginou até aqui. Pode ser uma ideia bem definida ou só algumas referências que você gostou!</p>
-<label>Como o nome deve aparecer na arte?<span id="titleHint"></span><input name="title" maxlength="200" required></label>
+<label><span id="namePrompt" class="question">Como o nome deve aparecer na arte?</span><span id="titleHint"></span><input name="title" maxlength="200" required></label>
 <label>Qual é a data do evento?<input type="date" name="event_date" required></label>
-<label>Qual é o horário?<span>Preencha se já estiver definido.</span><input type="time" name="start_time"></label>
+<label><span id="timePrompt" class="question">Qual é o horário?</span><span>Preencha se já estiver definido.</span><input type="time" name="start_time"></label>
 </section>
 <section>
 <h2>Sobre a identidade visual</h2>
-<label>Você já pensou em um tema?<span>Se ainda não tiver um, conta o que você quer transmitir com a festa.</span><textarea name="theme" maxlength="1500"></textarea></label>
+<label><span id="themePrompt" class="question">Você já pensou em um tema?</span><span id="themeHint">Se ainda não tiver um, conta o que você quer transmitir com a festa.</span><textarea name="theme" maxlength="1500"></textarea></label>
 <label>Tem cores que você ama ou prefere evitar?<textarea name="colors" maxlength="1000"></textarea></label>
 <label>Como você imagina o estilo da identidade?<span>Pode ser aquarela, desenhos, cores suaves, algo divertido ou delicado.</span><textarea name="style" maxlength="1500"></textarea></label>
 <label>Tem algum detalhe que você gostaria muito de ver na arte?<textarea name="details" maxlength="2500"></textarea></label>
 </section>
 <section>
 <h2 id="placeTitle">Local do evento</h2>
-<label>Nome do local<input name="venue" maxlength="300"></label>
+<label><span id="venuePrompt" class="question">Nome do local</span><input name="venue" maxlength="300"></label>
 <label>Endereço<span id="addressHint"></span><input name="address" maxlength="500"></label>
 <label id="phrase" hidden>Quer incluir alguma frase ou recado no convite?<textarea name="invite_phrase" maxlength="1200"></textarea></label>
+</section>
+<section id="weddingQuestions" hidden>
+<h2>Detalhes do casamento</h2>
+<label>O que da história de vocês poderia inspirar a identidade?<span>Pode ser um lugar, uma lembrança ou um símbolo que tenha significado.</span><textarea name="wedding_story" maxlength="1200" disabled></textarea></label>
+<label>Como vocês imaginam o monograma?<span>Contem quais iniciais usar, em que ordem e se gostariam de incluir algum elemento.</span><textarea name="wedding_monogram" maxlength="500" disabled></textarea></label>
+<label>A recepção será em outro local?<span>Se sim, informem nome, endereço e horário da recepção.</span><textarea name="wedding_reception" maxlength="1000" disabled></textarea></label>
+<label id="weddingInviteQuestions" hidden>Que outras informações entram no convite?<span>Por exemplo, nomes dos pais, confirmação de presença, traje ou site do casamento.</span><textarea name="wedding_invite_details" maxlength="1200" disabled></textarea></label>
+</section>
+<section id="debutanteQuestions" hidden>
+<h2>Detalhes dos 15 anos</h2>
+<label>O que tem a cara da debutante?<span>Contem um pouco da personalidade dela, do que ela ama e do que gostaria de ver na festa.</span><textarea name="debutante_personality" maxlength="1200" disabled></textarea></label>
+<label>Tem alguma inicial, símbolo ou detalhe que representa a debutante?<span>O vestido e a decoração também podem inspirar a arte, se já estiverem definidos.</span><textarea name="debutante_symbol" maxlength="800" disabled></textarea></label>
+<label>Quais momentos especiais vocês planejam?<span>Entrada, valsa, homenagens ou outros momentos que precisam aparecer nas peças.</span><textarea name="debutante_moments" maxlength="1000" disabled></textarea></label>
+<label id="debutanteInviteQuestions" hidden>Que outras informações entram no convite?<span>Por exemplo, traje, confirmação de presença ou um recado para os convidados.</span><textarea name="debutante_invite_details" maxlength="1200" disabled></textarea></label>
 </section>
 <section id="pieces" hidden>
 <h2>Sobre as peças combinadas</h2>
@@ -160,7 +175,33 @@ form.onsubmit=async e=>{
   $('titleHint').textContent=data.type==='Aniversário infantil'?'Exemplo: Joaquim · 1 ano. Inclua a idade se quiser.':'Escreva o nome da celebração ou de quem será homenageado.';
   $('placeTitle').textContent=data.includesInvite?'Detalhes do convite':'Local do evento';
   $('addressHint').textContent=data.includesInvite?'Preencha como deve aparecer no convite.':'Preencha se já estiver definido.';
+  const wedding=data.type==='Casamento',debutante=data.type==='15 anos';
+  if(wedding){
+   $('briefingTitle').textContent='Vamos criar a identidade do casamento de vocês?';
+   $('namePrompt').textContent='Como os nomes do casal devem aparecer na arte?';
+   $('titleHint').textContent='Escrevam os nomes na ordem em que devem aparecer.';
+   $('timePrompt').textContent='Qual é o horário da cerimônia?';
+   $('themePrompt').textContent='Que clima vocês imaginam para o casamento?';
+   $('themeHint').textContent='Pode ser clássico, romântico, contemporâneo, ao ar livre ou do jeito de vocês.';
+   $('placeTitle').textContent='Cerimônia';
+   $('venuePrompt').textContent='Nome do local da cerimônia';
+  }
+  if(debutante){
+   $('briefingTitle').textContent='Vamos criar a identidade dos seus 15 anos?';
+   $('namePrompt').textContent='Como o nome da debutante deve aparecer na arte?';
+   $('titleHint').textContent='Exemplo: Luísa · 15 anos.';
+   $('themePrompt').textContent='Tem um tema ou um conceito para a festa?';
+   $('themeHint').textContent='Pode ser uma ideia bem definida ou só a sensação que vocês querem transmitir.';
+  }
+  $('weddingQuestions').hidden=!wedding;
+  $('debutanteQuestions').hidden=!debutante;
+  $('weddingInviteQuestions').hidden=!wedding||!data.includesInvite;
+  $('debutanteInviteQuestions').hidden=!debutante||!data.includesInvite;
+  for(const field of form.querySelectorAll('#weddingQuestions textarea, #debutanteQuestions textarea')){
+   field.disabled=!!field.closest('section[hidden],label[hidden]');
+  }
   $('phrase').hidden=!data.includesInvite;
+  form.elements.invite_phrase.disabled=!data.includesInvite;
   $('pieces').hidden=!data.items;
   $('items').textContent=data.items;
   show(data.accepted?'briefing':'process');

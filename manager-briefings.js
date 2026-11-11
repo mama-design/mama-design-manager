@@ -18,8 +18,23 @@ function syncBriefingAccess(){
  $('newBriefing').hidden=!canCreateBriefing();
  if(!canCreateBriefing())$('briefingCreateCard').classList.add('hidden');
 }
-function availableBriefingPackages(){
- return packagesCache.filter(p=>p.active&&/infantil|social/i.test(p.event_type||''));
+function availableBriefingPackages(type){
+ return packagesCache.filter(pkg=>{
+  if(!pkg.active)return false;
+  const category=(pkg.event_type||'').trim().toLowerCase();
+  const wedding=category==='casamento',debutante=/^(15 anos|debutante)$/.test(category);
+  const social=/infantil|social/.test(category);
+  if(type==='Casamento')return wedding;
+  if(type==='15 anos')return debutante;
+  return type?social:wedding||debutante||social;
+ });
+}
+function setBriefingPackageOptions(){
+ const select=$('briefingPackage'),selected=select.value;
+ const options=availableBriefingPackages(val('briefingType'));
+ select.innerHTML='<option value="">Selecione</option>'+options.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
+ if(options.some(p=>p.id===selected))select.value=selected;
+ setBriefingPackage();
 }
 function briefingLink(token){return new URL('/briefing.html#'+token,location.origin).href}
 function showBriefingLink(token){
@@ -47,6 +62,7 @@ function showBriefingClientRule(){
  $('briefingSaveRule').hidden=!canAccess('clients','edit');
 }
 $('briefingPackage').onchange=setBriefingPackage;
+$('briefingType').onchange=setBriefingPackageOptions;
 $('briefingClient').onchange=showBriefingClientRule;
 $('briefingSaveRule').onclick=async()=>{
  const client=clientCache.find(x=>x.id===val('briefingClient')),button=$('briefingSaveRule');
@@ -70,14 +86,14 @@ $('newBriefing').onclick=async()=>{
   const options=availableBriefingPackages();
   if(!canCreateBriefing())return;
   if(!clientCache.length||!options.length){
-   msg('briefingAgendaStatus','Cadastre uma cliente e um pacote ativo de infantil ou social para gerar um briefing.',true);return;
+   msg('briefingAgendaStatus','Cadastre uma cliente e um pacote ativo para gerar um briefing.',true);return;
   }
   $('briefingCreate').reset();
   briefingRequestId=crypto.randomUUID();
   $('briefingClient').innerHTML='<option value="">Selecione</option>'+clientCache.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.full_name)+'</option>').join('');
-  $('briefingPackage').innerHTML='<option value="">Selecione</option>'+options.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.name)+'</option>').join('');
+  setBriefingPackageOptions();
   $('briefingClosed').value=briefingLocalDay();$('briefingClosed').max=$('briefingClosed').value;
-  showBriefingClientRule();setBriefingPackage();
+  showBriefingClientRule();
   msg('briefingCreateStatus','');
   $('briefingCreateCard').classList.remove('hidden');
   if(!openMobileForm('briefingCreateCard','Novo briefing'))$('briefingCreateCard').scrollIntoView({block:'nearest'});
@@ -138,7 +154,7 @@ function briefingCard(b,ev,client,today){
   (edit&&!b.preview_sent_at?'<div class="toolbar briefing-controls"><label>Prazo combinado<input type="date" data-brief-date="'+b.event_id+'" min="'+b.closed_on+'" value="'+b.promised_due+'"></label><button class="secondary" type="button" data-brief-action="deadline" data-brief-id="'+b.event_id+'">Atualizar prazo</button>'+
     (b.submitted_at?'<button type="button" data-brief-action="sent" data-brief-id="'+b.event_id+'">Marcar prévia enviada</button>':'')+'</div>':'')+
   (b.submitted_at?'<div class="briefing-answers">'+info('Horário',ev.start_time?.slice(0,5))+info('Local',ev.venue_name)+info('Endereço',ev.venue_address)+
-   info('Tema',answers.theme)+info('Cores',answers.colors)+info('Estilo',answers.style)+info('Detalhes criativos',answers.details)+info('Frase do convite',answers.invite_phrase)+info('Peças combinadas',b.items)+info('Detalhes das peças',answers.pieces)+
+   info(ev.event_type==='Casamento'?'Clima do casamento':'Tema',answers.theme)+info('História do casal',answers.wedding_story)+info('Monograma do casal',answers.wedding_monogram)+info('Recepção',answers.wedding_reception)+info('Informações do convite de casamento',answers.wedding_invite_details)+info('Personalidade da debutante',answers.debutante_personality)+info('Iniciais e símbolos',answers.debutante_symbol)+info('Momentos da festa',answers.debutante_moments)+info('Informações do convite de 15 anos',answers.debutante_invite_details)+info('Cores',answers.colors)+info('Estilo',answers.style)+info('Detalhes criativos',answers.details)+info('Frase do convite',answers.invite_phrase)+info('Peças combinadas',b.items)+info('Detalhes das peças',answers.pieces)+
    (links.length?'<div class="briefing-answer"><strong>Links de referência</strong>'+links.map((x,i)=>'<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer">Abrir referência '+(i+1)+'</a>').join('')+'</div>':'')+
    photoAction+'</div>':'')+'</details>';
 }
