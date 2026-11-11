@@ -27,7 +27,7 @@ function renderStudioCalendar(){
  const [year,month]=studioMonth.split('-').map(Number);
  $('calendarMonth').textContent=new Intl.DateTimeFormat('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(year,month-1,1)));
  const firstDay=new Date(Date.UTC(year,month-1,1)).getUTCDay(),days=new Date(Date.UTC(year,month,0)).getUTCDate();
- const visible=eventCache.filter(studioMatches);
+ const visible=eventCache.filter(event=>studioMatches(event)&&studioStage(event)!=='done');
  const marks=new Map();
  for(const event of visible)for(const entry of studioDates(event)){
   if(!marks.has(entry.date))marks.set(entry.date,[]);
