@@ -62,6 +62,12 @@ function readAnswers(form: FormData, invite: boolean, items: string, type: strin
     const value = form.get(field);
     if (typeof value === 'string' && value.trim()) answers[field] = value.trim().slice(0,limit);
   }
+  const choice=form.get('typography_choice');
+  if(type==='Casamento'||type==='15 anos'){
+    const allowed=type==='Casamento'?/^(?:[1-9]|other)$/:/^[1-8]$/;
+    if(choice!==null&&(typeof choice!=='string'||!allowed.test(choice)))return null;
+    if(typeof choice==='string')answers.typography_choice=choice;
+  }
   const date = answers.event_date;
   if (!answers.title || !date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   const day = new Date(date+'T00:00:00Z');

@@ -25,6 +25,7 @@ form section+section{border-top:1px solid var(--line);padding-top:20px;margin-to
 @media(max-width:520px){button[type=submit],#start{width:100%}}
 label span.question{font:inherit;color:inherit}
 </style>
+<link rel="stylesheet" href="/briefing-typography.css?v=1">
 </head>
 <body>
 <main>
@@ -57,6 +58,13 @@ label span.question{font:inherit;color:inherit}
 <label>Tem cores que você ama ou prefere evitar?<textarea name="colors" maxlength="1000"></textarea></label>
 <label>Como você imagina o estilo da identidade?<span>Pode ser aquarela, desenhos, cores suaves, algo divertido ou delicado.</span><textarea name="style" maxlength="1500"></textarea></label>
 <label>Tem algum detalhe que você gostaria muito de ver na arte?<textarea name="details" maxlength="2500"></textarea></label>
+</section>
+<section id="typographyQuestions" hidden>
+<fieldset class="typography-fieldset">
+<legend id="typographyPrompt"></legend>
+<p id="typographyHelp">A amostra é uma referência de estilo. A fonte final será escolhida para a identidade visual do seu projeto.</p>
+<div id="typographyOptions" class="typography-options"></div>
+</fieldset>
 </section>
 <section>
 <h2 id="placeTitle">Local do evento</h2>
@@ -121,6 +129,17 @@ async function call(action,body){
 }
 function report(message){$('status').textContent=message;if(message)$('status').scrollIntoView({block:'nearest'})}
 function show(id){for(const section of ['loading','process','briefing','success'])$(section).hidden=section!==id}
+function renderTypography(type){
+ const wedding=type==='Casamento',debutante=type==='15 anos';
+ if(!wedding&&!debutante)return;
+ const category=wedding?'casamento':'debutante',count=wedding?9:8;
+ $('typographyPrompt').textContent=wedding?'Qual estilo de tipografia vocês mais gostam?':'Qual estilo de tipografia você mais gosta?';
+ $('typographyOptions').innerHTML=Array.from({length:count},(_,i)=>{
+  const option=i+1;
+  return '<label class="typography-option"><span class="typography-option-title"><input type="radio" name="typography_choice" value="'+option+'" aria-describedby="typographyHelp" required> Opção '+option+'</span><span class="typography-sample" data-sample="'+category+'-'+option+'" aria-hidden="true"></span></label>';
+ }).join('')+(wedding?'<label class="typography-option"><span class="typography-option-title"><input type="radio" name="typography_choice" value="other" aria-describedby="typographyHelp" required> Outro</span><span>Envie suas referências no final.</span></label>':'');
+ $('typographyQuestions').hidden=false;
+}
 function renderPhotos(){
  const nodes=selected.map((entry,index)=>{
   const box=document.createElement('div'),img=document.createElement('img');
@@ -194,6 +213,7 @@ form.onsubmit=async e=>{
    $('themePrompt').textContent='Tem um tema ou um conceito para a festa?';
    $('themeHint').textContent='Pode ser uma ideia bem definida ou só a sensação que vocês querem transmitir.';
   }
+  renderTypography(data.type);
   $('weddingQuestions').hidden=!wedding;
   $('debutanteQuestions').hidden=!debutante;
   $('weddingInviteQuestions').hidden=!wedding||!data.includesInvite;

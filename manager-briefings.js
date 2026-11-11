@@ -126,6 +126,15 @@ $('briefingCreate').onsubmit=async e=>{
 
 function briefingCard(b,ev,client,today){
  const answers=b.answers||{};
+ const isWedding=ev.event_type==='Casamento',isDebutante=ev.event_type==='15 anos';
+ const typographyChoice=String(answers.typography_choice||'');
+ let typography='';
+ if((isWedding&&/^[1-9]$/.test(typographyChoice))||(isDebutante&&/^[1-8]$/.test(typographyChoice))){
+  const sample=(isWedding?'casamento':'debutante')+'-'+typographyChoice;
+  typography='<div class="briefing-answer"><strong>Estilo de tipografia</strong><p>Opção '+typographyChoice+'</p><span class="typography-sample" data-sample="'+sample+'" aria-hidden="true"></span></div>';
+ }else if(isWedding&&typographyChoice==='other'){
+  typography='<div class="briefing-answer"><strong>Estilo de tipografia</strong><p>Outro</p></div>';
+ }
  const sale=briefingSales.get(b.event_id);
  const received=sale?(sale.sale_installments||[]).reduce((n,i)=>n+Number(i.paid_amount||0),0):0;
  const financial=sale&&(canAccess('sales','view')||canAccess('finance','view'))
@@ -154,7 +163,7 @@ function briefingCard(b,ev,client,today){
   (edit&&!b.preview_sent_at?'<div class="toolbar briefing-controls"><label>Prazo combinado<input type="date" data-brief-date="'+b.event_id+'" min="'+b.closed_on+'" value="'+b.promised_due+'"></label><button class="secondary" type="button" data-brief-action="deadline" data-brief-id="'+b.event_id+'">Atualizar prazo</button>'+
     (b.submitted_at?'<button type="button" data-brief-action="sent" data-brief-id="'+b.event_id+'">Marcar prévia enviada</button>':'')+'</div>':'')+
   (b.submitted_at?'<div class="briefing-answers">'+info('Horário',ev.start_time?.slice(0,5))+info('Local',ev.venue_name)+info('Endereço',ev.venue_address)+
-   info(ev.event_type==='Casamento'?'Clima do casamento':'Tema',answers.theme)+info('História do casal',answers.wedding_story)+info('Monograma do casal',answers.wedding_monogram)+info('Recepção',answers.wedding_reception)+info('Informações do convite de casamento',answers.wedding_invite_details)+info('Personalidade da debutante',answers.debutante_personality)+info('Iniciais do monograma',answers.debutante_initials)+info('Elementos do monograma',answers.debutante_monogram_details)+info('Iniciais e símbolos',answers.debutante_symbol)+info('Momentos da festa',answers.debutante_moments)+info('Informações do convite de 15 anos',answers.debutante_invite_details)+info('Cores',answers.colors)+info('Estilo',answers.style)+info('Detalhes criativos',answers.details)+info('Frase do convite',answers.invite_phrase)+info('Peças combinadas',b.items)+info('Detalhes das peças',answers.pieces)+
+   info(ev.event_type==='Casamento'?'Clima do casamento':'Tema',answers.theme)+info('História do casal',answers.wedding_story)+info('Monograma do casal',answers.wedding_monogram)+info('Recepção',answers.wedding_reception)+info('Informações do convite de casamento',answers.wedding_invite_details)+info('Personalidade da debutante',answers.debutante_personality)+info('Iniciais do monograma',answers.debutante_initials)+info('Elementos do monograma',answers.debutante_monogram_details)+info('Iniciais e símbolos',answers.debutante_symbol)+info('Momentos da festa',answers.debutante_moments)+info('Informações do convite de 15 anos',answers.debutante_invite_details)+info('Cores',answers.colors)+typography+info('Estilo',answers.style)+info('Detalhes criativos',answers.details)+info('Frase do convite',answers.invite_phrase)+info('Peças combinadas',b.items)+info('Detalhes das peças',answers.pieces)+
    (links.length?'<div class="briefing-answer"><strong>Links de referência</strong>'+links.map((x,i)=>'<a href="'+esc(x)+'" target="_blank" rel="noopener noreferrer">Abrir referência '+(i+1)+'</a>').join('')+'</div>':'')+
    photoAction+'</div>':'')+'</details>';
 }
