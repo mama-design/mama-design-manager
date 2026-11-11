@@ -14,7 +14,7 @@ main{width:min(660px,100%);margin:auto;padding:24px 16px 56px}header{text-align:
 h1,h2{color:var(--green);font:400 2rem/1.12 Georgia,serif;margin:0 0 12px}h2{font-size:1.5rem}
 p{margin:0 0 16px}.eyebrow{color:var(--terra);text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:.73rem}
 .dates{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:20px 0}.dates div{background:#edf0e5;padding:12px;border-radius:10px}.dates strong{display:block;color:var(--green)}
-label{display:block;font-weight:600;margin:14px 0}label span,.hint{display:block;font-size:.86rem;font-weight:400;color:#62695d}
+label{display:block;color:#26382e;font-weight:600;margin:14px 0}label span,.hint{display:block;font-size:.86rem;font-weight:400;color:#515b52}
 input:not([type=checkbox]),textarea{display:block;margin:6px 0 0;width:100%;min-width:0;max-width:100%;border:1px solid #d2d6c9;border-radius:8px;background:#fff;padding:10px 12px;font:inherit;color:inherit}
 textarea{resize:vertical;min-height:75px}input[type=date],input[type=time]{appearance:none;min-height:46px}input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left}
 .checkbox{display:flex;align-items:flex-start;gap:10px}.checkbox input{width:20px;height:20px;margin:2px 0 0;accent-color:var(--green);flex:none}
@@ -137,7 +137,7 @@ function renderTypography(type){
  $('typographyOptions').innerHTML=Array.from({length:count},(_,i)=>{
   const option=i+1;
   return '<label class="typography-option"><span class="typography-option-title"><input type="radio" name="typography_choice" value="'+option+'" aria-describedby="typographyHelp" required> Opção '+option+'</span><span class="typography-sample" data-sample="'+category+'-'+option+'" aria-hidden="true"></span></label>';
- }).join('')+(wedding?'<label class="typography-option"><span class="typography-option-title"><input type="radio" name="typography_choice" value="other" aria-describedby="typographyHelp" required> Outro</span><span>Envie suas referências no final.</span></label>':'');
+ }).join('') + '<label class="typography-option"><span class="typography-option-title"><input type="radio" name="typography_choice" value="other" aria-describedby="typographyHelp" required> Outro</span><span>Envie suas referências no final.</span></label>';
  $('typographyQuestions').hidden=false;
 }
 function renderPhotos(){

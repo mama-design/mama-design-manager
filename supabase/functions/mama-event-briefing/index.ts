@@ -64,7 +64,7 @@ function readAnswers(form: FormData, invite: boolean, items: string, type: strin
   }
   const choice=form.get('typography_choice');
   if(type==='Casamento'||type==='15 anos'){
-    const allowed=type==='Casamento'?/^(?:[1-9]|other)$/:/^[1-8]$/;
+    const allowed=type==='Casamento'?/^(?:[1-9]|other)$/:/^(?:[1-8]|other)$/;
     if(choice!==null&&(typeof choice!=='string'||!allowed.test(choice)))return null;
     if(typeof choice==='string')answers.typography_choice=choice;
   }
