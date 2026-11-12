@@ -25,7 +25,7 @@ form section+section{border-top:1px solid var(--line);padding-top:20px;margin-to
 @media(max-width:520px){button[type=submit],#start{width:100%}}
 label span.question{font:inherit;color:inherit}
 </style>
-<link rel="stylesheet" href="/briefing-typography.css?v=1">
+<link rel="stylesheet" href="/briefing-typography.css?v=2">
 </head>
 <body>
 <main>
@@ -134,7 +134,7 @@ function show(id){for(const section of ['loading','process','briefing','success'
 function renderTypography(type){
  const wedding=type==='Casamento',debutante=type==='15 anos';
  if(!wedding&&!debutante)return;
- const category=wedding?'casamento':'debutante',count=wedding?9:8;
+ const category=wedding?'casamento':'debutante',count=9;
  $('typographyPrompt').textContent=wedding?'Qual estilo de tipografia vocês mais gostam?':'Qual estilo de tipografia você mais gosta?';
  $('typographyOptions').innerHTML=Array.from({length:count},(_,i)=>{
   const option=i+1;

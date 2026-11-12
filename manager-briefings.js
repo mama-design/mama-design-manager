@@ -129,7 +129,7 @@ function briefingCard(b,ev,client,today){
  const isWedding=ev.event_type==='Casamento',isDebutante=ev.event_type==='15 anos';
  const typographyChoice=String(answers.typography_choice||'');
  let typography='';
- if((isWedding&&/^[1-9]$/.test(typographyChoice))||(isDebutante&&/^[1-8]$/.test(typographyChoice))){
+ if((isWedding&&/^[1-9]$/.test(typographyChoice))||(isDebutante&&/^[1-9]$/.test(typographyChoice))){
   const sample=(isWedding?'casamento':'debutante')+'-'+typographyChoice;
   typography='<div class="briefing-answer"><strong>Estilo de tipografia</strong><p>Opção '+typographyChoice+'</p><span class="typography-sample" data-sample="'+sample+'" aria-hidden="true"></span></div>';
  }else if((isWedding||isDebutante)&&typographyChoice==='other'){

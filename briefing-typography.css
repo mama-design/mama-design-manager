@@ -24,3 +24,5 @@
 .typography-sample[data-sample="debutante-6"]{height:92px;background-image:url('/icons/tipografia/debutante-4-7.png');background-position:-95px -400px}
 .typography-sample[data-sample="debutante-7"]{height:73px;background-image:url('/icons/tipografia/debutante-4-7.png');background-position:-95px -585px}
 .typography-sample[data-sample="debutante-8"]{height:83px;background-image:url('/icons/tipografia/debutante-8.png');background-position:-113px -83px}
+
+.typography-sample[data-sample="debutante-9"]{height:auto;aspect-ratio:502 / 182;background-image:url("/icons/tipografia/debutante-9.png");background-size:contain;background-position:center}
